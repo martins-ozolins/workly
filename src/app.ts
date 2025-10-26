@@ -2,7 +2,6 @@ import express, { type Request, type Response } from "express";
 import { auth } from "./lib/auth.js";
 import { toNodeHandler } from "better-auth/node";
 import cors from "cors";
-import authRoutes from "./routes/auth.routes.js";
 
 const app = express();
 
@@ -21,7 +20,6 @@ app.use(express.json());
 app.all("/api/auth/*splat", toNodeHandler(auth));
 
 // routes
-app.use("/api/auth", authRoutes);
 
 app.get("/", (_req: Request, res: Response) => {
   res.send("Hello from Express + TypeScript!");
