@@ -7,16 +7,35 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  admin
+  hr
+  employee
+}
+
+enum DocType {
+  passport
+  national_id
+  visa_permit
+  contract
+  tax_form
+  other
+}
+
 model User {
-  id            String    @id
+  id            String   @id
   name          String
   email         String
-  emailVerified Boolean   @default(false)
+  emailVerified Boolean  @default(false)
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @default(now()) @updatedAt
-  sessions      Session[]
-  accounts      Account[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+
+  // auth/session
+  sessions Session[]
+  accounts Account[]
+
+  members Member[]
 
   @@unique([email])
   @@map("user")
@@ -65,4 +84,110 @@ model Verification {
   updatedAt  DateTime @default(now()) @updatedAt
 
   @@map("verification")
+}
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  country   String?
+  plan      String?
+  createdAt DateTime @default(now())
+
+  members   Member[]
+  documents Document[]
+  invites   Invite[]
+
+  @@index([slug])
+  @@map("organization")
+}
+
+model Member {
+  id     String  @id @default(uuid())
+  orgId  String
+  userId String? // null until linked to a User
+  role   Role
+
+  // person fields
+  fullName  String
+  email     String
+  dept      String?
+  startDate DateTime?
+  status    String    @default("active")
+  country   String?
+  createdAt DateTime  @default(now())
+
+  org  Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  documentsOwned    Document[] @relation("DocOwnerMember")
+  documentsVerified Document[] @relation("DocVerifiedByMember")
+  documentsUploaded Document[] @relation("DocumentsUploaded")
+
+  @@unique([orgId, email]) // no duplicate people by email within an org
+  @@index([orgId, role])
+  @@map("member")
+}
+
+enum DocumentStatus {
+  success
+  waiting
+  failure
+  resubmit
+}
+
+model Document {
+  id          String    @id @default(uuid())
+  // document info
+  storageKey  String
+  fileName    String
+  contentType String
+  sizeBytes   Int
+  checksum    String?
+  expiryDate  DateTime?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // org relation
+  orgId String
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  // owner info
+  memberId String
+  member   Member @relation("DocOwnerMember", fields: [memberId], references: [id], onDelete: Cascade)
+
+  type               DocType
+  verified           Boolean        @default(false)
+  status             DocumentStatus @default(waiting)
+  reviewedAt         DateTime?
+  reviewComment      String?
+  // member that verified this doc
+  verifiedByMemberId String?
+  verifiedByMember   Member?        @relation("DocVerifiedByMember", fields: [verifiedByMemberId], references: [id], onDelete: SetNull)
+
+  // uploader info
+  uploadedById     String?
+  uploadedByMember Member? @relation("DocumentsUploaded", fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  @@index([orgId, memberId])
+  @@index([orgId, type, verified])
+  @@index([orgId, expiryDate])
+  @@map("document")
+}
+
+model Invite {
+  id         String    @id @default(uuid())
+  orgId      String
+  email      String
+  role       Role
+  token      String    @unique
+  expiresAt  DateTime
+  acceptedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, email])
+  @@map("invite")
 }
