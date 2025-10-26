@@ -14,6 +14,8 @@ export default defineConfig([
       "prisma/migrations/**",
       "prisma/generated/**",
       "vitest.config.ts",
+      "prisma/client/**",
+      "src/generated/prisma/**",
     ],
   },
   eslint.configs.recommended,

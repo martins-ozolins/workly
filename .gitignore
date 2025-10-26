@@ -16,8 +16,7 @@
 /prisma/dev.db
 /prisma/dev.db-journal
 /prisma/migrations/
-
-/node_modules/.prisma
+/src/generated/prisma
 
 # VSCode and IDE
 .vscode/
@@ -26,4 +25,3 @@
 
 # OS junk
 .DS_Store
-
