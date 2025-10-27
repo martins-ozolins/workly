@@ -2,6 +2,7 @@ import express, { type Request, type Response } from "express";
 import { auth } from "./lib/auth.js";
 import { toNodeHandler } from "better-auth/node";
 import cors from "cors";
+import { errorHandler } from "./shared/middleware/error.middleware.js";
 
 const app = express();
 
@@ -24,5 +25,7 @@ app.all("/api/auth/*splat", toNodeHandler(auth));
 app.get("/", (_req: Request, res: Response) => {
   res.send("Hello from Express + TypeScript!");
 });
+
+app.use(errorHandler);
 
 export default app;
