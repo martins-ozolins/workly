@@ -9,7 +9,6 @@ import { requireAuth } from "./shared/middleware/auth.middleware.js";
 import userRoutes from "./features/users/user.routes.js";
 import organisationRoutes from "./features/organisations/organisation.routes.js";
 import memberRoutes from "./features/members/member.routes.js";
-import documentRoutes from "./features/documents/document.routes.js";
 
 const app = express();
 
@@ -31,7 +30,7 @@ app.get("/", (_req: Request, res: Response) => {
 app.use("/api/users", requireAuth, userRoutes);
 app.use("/api/organisations", requireAuth, organisationRoutes);
 app.use("/api/members", requireAuth, memberRoutes);
-app.use("/api/documents", requireAuth, documentRoutes);
+// app.use("/api/documents", requireAuth, documentRoutes);
 
 // Error handler must be last
 app.use(errorHandler);

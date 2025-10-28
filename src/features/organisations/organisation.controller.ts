@@ -12,11 +12,7 @@ import { fromNodeHeaders } from "better-auth/node";
 export class OrganisationController {
   private organisationService = new OrganisationService();
 
-  getOrganisation = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
+  getOrganisation = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!req.params.id) {
         throw Errors.notFound();

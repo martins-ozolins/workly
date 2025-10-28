@@ -1,12 +1,16 @@
 import type { Request, Response, NextFunction } from "express";
 import { UserService } from "./user.service.js";
-import { updateUserSchema, createUserSchema } from "./user.validators.js";
-import { AppError } from "../../shared/errors/AppError.js";
+import { updateUserSchema } from "./user.validators.js";
+import { Errors } from "../../shared/errors/AppError.js";
+import { formatZodErrors } from "../../utils/formatZodErrors.js";
 
 export class UserController {
   private userService = new UserService();
 
   getUser = async (req: Request, res: Response, next: NextFunction) => {
+    if (!req.params.id) {
+      throw Errors.notFound();
+    }
     try {
       const user = await this.userService.getUserById(req.params.id);
       res.json(user);
@@ -25,10 +29,16 @@ export class UserController {
   };
 
   updateUser = async (req: Request, res: Response, next: NextFunction) => {
+    if (!req.params.id) {
+      throw Errors.notFound();
+    }
     try {
       const validationResult = updateUserSchema.safeParse(req.body);
       if (!validationResult.success) {
-        throw new AppError(validationResult.error.errors[0].message, 400);
+        throw Errors.validation({
+          message: "Invalid user data",
+          details: formatZodErrors(validationResult),
+        });
       }
 
       const user = await this.userService.updateUser(
@@ -42,6 +52,9 @@ export class UserController {
   };
 
   deleteUser = async (req: Request, res: Response, next: NextFunction) => {
+    if (!req.params.id) {
+      throw Errors.notFound();
+    }
     try {
       const result = await this.userService.deleteUser(req.params.id);
       res.json(result);
