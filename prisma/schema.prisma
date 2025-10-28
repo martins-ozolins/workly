@@ -91,6 +91,7 @@ model Organization {
   name      String
   slug      String   @unique
   country   String?
+  address   String?
   plan      String?
   createdAt DateTime @default(now())
 
@@ -109,7 +110,7 @@ model Member {
   role   Role
 
   // person fields
-  fullName  String
+  name      String
   email     String
   dept      String?
   startDate DateTime?
@@ -137,36 +138,36 @@ enum DocumentStatus {
 }
 
 model Document {
-  id          String    @id @default(uuid())
+  id            String         @id @default(uuid())
   // document info
-  storageKey  String
-  fileName    String
-  contentType String
-  sizeBytes   Int
-  checksum    String?
-  expiryDate  DateTime?
-  notes       String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  storageKey    String
+  fileName      String
+  contentType   String
+  sizeBytes     Int
+  checksum      String?
+  expiryDate    DateTime?
+  notes         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  type          DocType
+  verified      Boolean        @default(false)
+  status        DocumentStatus @default(waiting)
+  reviewedAt    DateTime?
+  reviewComment String?
 
   // org relation
   orgId String
   org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
-  // owner info
+  // FK to the document's owner 
   memberId String
   member   Member @relation("DocOwnerMember", fields: [memberId], references: [id], onDelete: Cascade)
 
-  type               DocType
-  verified           Boolean        @default(false)
-  status             DocumentStatus @default(waiting)
-  reviewedAt         DateTime?
-  reviewComment      String?
-  // member that verified this doc
+  // FK to the member that verified this doc
   verifiedByMemberId String?
-  verifiedByMember   Member?        @relation("DocVerifiedByMember", fields: [verifiedByMemberId], references: [id], onDelete: SetNull)
+  verifiedByMember   Member? @relation("DocVerifiedByMember", fields: [verifiedByMemberId], references: [id], onDelete: SetNull)
 
-  // uploader info
+  // FK to the member who uploaded 
   uploadedById     String?
   uploadedByMember Member? @relation("DocumentsUploaded", fields: [uploadedById], references: [id], onDelete: SetNull)
 

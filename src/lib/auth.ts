@@ -8,6 +8,14 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "sqlite",
   }),
+  // user: {
+  //   additionalFields: {
+  //     role: {
+  //       type: "string",
+  //       input: false,
+  //     },
+  //   },
+  // },
   hooks: {
     after: createAuthMiddleware(async ctx => {
       if (ctx.path.startsWith("/sign-up")) {
@@ -34,3 +42,6 @@ export const auth = betterAuth({
     },
   },
 });
+
+export type Session = typeof auth.$Infer.Session;
+export type User = typeof auth.$Infer.Session.user;
