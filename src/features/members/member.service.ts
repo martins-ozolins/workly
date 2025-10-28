@@ -28,6 +28,10 @@ export class MemberService {
     return this.memberRepository.findByOrganisation(organisationId);
   }
 
+  async getMembersByOrganisationSlug(slug: string) {
+    return this.memberRepository.findByOrganisationSlug(slug);
+  }
+
   async getAllMembers() {
     return this.memberRepository.findAll();
   }

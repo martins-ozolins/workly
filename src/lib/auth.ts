@@ -1,13 +1,17 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { createAuthMiddleware } from "better-auth/api";
-import { prisma } from "src/config/prisma.js";
+import { prisma } from "../config/prisma.js";
 import { APIError } from "better-auth/api";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "sqlite",
   }),
+  trustedOrigins: [
+    "http://localhost:3000",
+    "http://localhost:5173",
+  ],
   // user: {
   //   additionalFields: {
   //     role: {

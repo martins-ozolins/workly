@@ -16,8 +16,8 @@ export class OrganisationService {
     return organisation;
   }
 
-  async getOrganisationBySlug(id: string) {
-    const organisation = await this.organisationRepository.findById(id);
+  async getOrganisationBySlug(slug: string) {
+    const organisation = await this.organisationRepository.findBySlug(slug);
     if (!organisation) {
       throw new AppError("Organisation not found", 404);
     }

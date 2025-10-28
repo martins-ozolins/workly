@@ -83,6 +83,28 @@ export class MemberRepository {
     });
   }
 
+  async findByOrganisationSlug(slug: string) {
+    return prisma.member.findMany({
+      where: {
+        org: {
+          slug,
+        },
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  }
+
   async findAll() {
     return prisma.member.findMany({
       include: {

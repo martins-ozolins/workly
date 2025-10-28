@@ -25,11 +25,6 @@ export class OrganisationRepository {
 
   async findAll() {
     return prisma.organization.findMany({
-      include: {
-        _count: {
-          select: { members: true },
-        },
-      },
       orderBy: {
         createdAt: "desc",
       },

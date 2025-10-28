@@ -6,9 +6,10 @@ export function errorHandler(
   res: Response,
   next: NextFunction
 ) {
-  if (res.headersSent) {
-    return next(err);
-  }
-  res.status(500);
-  res.render("error", { error: err });
+  // Handle custom AppError instances
+  console.log(err);
+  res.status(500).json({
+    error: "Internal server error",
+    ...(process.env.NODE_ENV === "development" && { details: err }),
+  });
 }

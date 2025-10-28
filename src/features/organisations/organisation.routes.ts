@@ -6,6 +6,7 @@ const organisationController = new OrganisationController();
 
 router.get("/", organisationController.getAllOrganisations);
 router.get("/:id", organisationController.getOrganisation);
+router.get("/:slug/members", organisationController.getOrganisationMembers);
 router.post("/", organisationController.createOrganisation);
 router.patch("/:id", organisationController.updateOrganisation);
 router.delete("/:id", organisationController.deleteOrganisation);
