@@ -75,7 +75,7 @@ export class OrganisationService {
       throw new AppError("Organisation not found", 404);
     }
 
-    // For now, we'll create an active member directly
+    // Add member
     return this.organisationRepository.createMember(orgId, {
       ...data,
       userId: null,

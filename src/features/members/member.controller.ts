@@ -4,10 +4,7 @@ import { Errors } from "../../shared/errors/AppError.js";
 import { formatZodErrors } from "../../utils/formatZodErrors.js";
 import { auth } from "../../lib/auth.js";
 import { fromNodeHeaders } from "better-auth/node";
-import {
-  createMemberForOrgSchema,
-  updateMemberSchema,
-} from "./member.validators.js";
+import { createMemberSchema, updateMemberSchema } from "./member.validators.js";
 
 export class MemberController {
   private memberService = new MemberService();
@@ -77,7 +74,7 @@ export class MemberController {
 
   createMember = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const validationResult = createMemberForOrgSchema.safeParse(req.body);
+      const validationResult = createMemberSchema.safeParse(req.body);
       if (!validationResult.success) {
         throw Errors.validation({
           details: formatZodErrors(validationResult),

@@ -42,6 +42,8 @@ router.post(
   organisationController.addNewMember
 );
 
+// TODO: add /:slug/members/:memberId GET route when updating single user to load view data
+
 router.post(
   "/:slug/members/:memberId",
   requireAuth,
