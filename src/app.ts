@@ -3,7 +3,10 @@ import { auth } from "./lib/auth.js";
 import { toNodeHandler } from "better-auth/node";
 import { corsMiddleware } from "./shared/middleware/cors.middleware.js";
 import { errorHandler } from "./shared/middleware/error.middleware.js";
-import { requireAuth } from "./shared/middleware/auth.middleware.js";
+import {
+  requireAuth,
+  requireSystemAdmin,
+} from "./shared/middleware/auth.middleware.js";
 
 // Feature routes
 import userRoutes from "./features/users/user.routes.js";
@@ -27,7 +30,7 @@ app.get("/", (_req: Request, res: Response) => {
 });
 
 // API routes (protected by auth middleware)
-app.use("/api/users", requireAuth, userRoutes);
+app.use("/api/users", requireSystemAdmin, userRoutes);
 app.use("/api/organisations", requireAuth, organisationRoutes);
 app.use("/api/members", requireAuth, memberRoutes);
 // app.use("/api/documents", requireAuth, documentRoutes);

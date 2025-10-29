@@ -1,12 +1,11 @@
 import { Router } from "express";
 import { UserController } from "./user.controller.js";
+import { requireSystemAdmin } from "../../shared/middleware/auth.middleware.js";
 
 const router = Router();
 const userController = new UserController();
 
-router.get("/", userController.getAllUsers);
-router.get("/:id", userController.getUser);
-router.patch("/:id", userController.updateUser);
-router.delete("/:id", userController.deleteUser);
+router.get("/", requireSystemAdmin, userController.getAllUsers);
+router.get("/:id", requireSystemAdmin, userController.getUserById);
 
 export default router;
