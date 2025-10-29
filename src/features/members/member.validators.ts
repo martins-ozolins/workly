@@ -4,7 +4,7 @@ export const RoleEnum = z.enum(["admin", "hr", "employee"], {
   error: "Invalid role",
 });
 
-export const createMemberForOrgSchema = z.object({
+export const createMemberSchema = z.object({
   orgId: z.uuid({ error: "Invalid organisation id" }),
 
   userId: z.uuid({ error: "Invalid userId" }).nullable(),
@@ -60,5 +60,5 @@ export const updateMemberSchema = z.object({
     .nullable(),
 });
 
-export type CreateMemberForOrgInput = z.infer<typeof createMemberForOrgSchema>;
+export type CreateMemberInput = z.infer<typeof createMemberSchema>;
 export type UpdateMemberInput = z.infer<typeof updateMemberSchema>;

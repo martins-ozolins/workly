@@ -4,6 +4,10 @@ import {
   createOrganisationSchema,
   updateOrganisationSchema,
 } from "./organisation.validators.js";
+import {
+  createMemberSchema,
+  updateMemberSchema,
+} from "../members/member.validators.js";
 import { Errors } from "../../shared/errors/AppError.js";
 import { formatZodErrors } from "../../utils/formatZodErrors.js";
 import { auth } from "../../lib/auth.js";
@@ -14,41 +18,12 @@ export class OrganisationController {
   private organisationService = new OrganisationService();
   private memberService = new MemberService();
 
-  getOrganisation = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      if (!req.params.id) {
-        throw Errors.notFound();
-      }
-
-      const session = await auth.api.getSession({
-        headers: fromNodeHeaders(req.headers),
-      });
-      if (!session?.user) {
-        throw Errors.unauthorized();
-      }
-
-      const organisation = await this.organisationService.getOrganisationById(
-        req.params.id
-      );
-      res.json(organisation);
-    } catch (error) {
-      next(error);
-    }
-  };
-
   getAllOrganisations = async (
     req: Request,
     res: Response,
     next: NextFunction
   ) => {
     try {
-      const session = await auth.api.getSession({
-        headers: fromNodeHeaders(req.headers),
-      });
-      if (!session?.user) {
-        throw Errors.unauthorized();
-      }
-
       const organisations =
         await this.organisationService.getAllOrganisations();
       res.json(organisations);
@@ -96,36 +71,178 @@ export class OrganisationController {
     }
   };
 
-  updateOrganisation = async (
+  /**
+   * GET /organisations/:slug/admin - Admin full control view
+   * Returns: full org data + full member data (all editable)
+   * Access: Admin only
+   */
+  getOrganisationAdminView = async (
     req: Request,
     res: Response,
     next: NextFunction
   ) => {
     try {
-      if (!req.params.id) {
+      if (!req.params.slug) {
         throw Errors.notFound();
       }
 
-      const session = await auth.api.getSession({
-        headers: fromNodeHeaders(req.headers),
-      });
-      if (!session?.user) {
-        throw Errors.unauthorized();
+      const organisation =
+        await this.organisationService.getOrganisationForAdminView(
+          req.params.slug
+        );
+      res.json(organisation);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * GET /organisations/:slug/members - HR management view
+   * Returns: org info + full member list with management details
+   * Access: Admin or HR only
+   */
+  getOrganisationHrView = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      if (!req.params.slug) {
+        throw Errors.notFound();
       }
 
-      // validate data
-      const validationResult = updateOrganisationSchema.safeParse(req.body);
+      const organisation =
+        await this.organisationService.getOrganisationForHrView(
+          req.params.slug
+        );
+      res.json(organisation);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-      // throw error with validation results
+  /**
+   * POST /organisations/:slug/members - add new member
+   * Creates invitation for new member
+   * Access: Admin or HR
+   */
+  addNewMember = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.params.slug || !req.organisationId) {
+        throw Errors.notFound();
+      }
+
+      const validationResult = createMemberSchema.safeParse(req.body);
       if (!validationResult.success) {
-        throw Errors.validation({
-          details: formatZodErrors(validationResult),
-        });
+        throw Errors.validation({ details: formatZodErrors(validationResult) });
       }
-      const organisation = await this.organisationService.updateOrganisation(
-        req.params.id,
+
+      const invite = await this.organisationService.addNewMember(
+        req.organisationId,
         validationResult.data
       );
+      res.status(201).json(invite);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * POST /organisations/:slug/members/:memberId - Update member
+   * Updates member information
+   * Access: Admin or HR
+   */
+  updateMember = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.params.slug || !req.params.memberId || !req.organisationId) {
+        throw Errors.notFound();
+      }
+
+      const validationResult = updateMemberSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        throw Errors.validation({ details: formatZodErrors(validationResult) });
+      }
+
+      const member = await this.organisationService.updateMember(
+        req.params.memberId,
+        validationResult.data
+      );
+      res.json(member);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * DELETE /organisations/:slug/members/:memberId - Deactivate member
+   * Soft deletes member (sets status to inactive)
+   * Access: Admin only
+   */
+  deleteMember = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.params.slug || !req.params.memberId || !req.organisationId) {
+        throw Errors.notFound();
+      }
+
+      const result = await this.organisationService.deactivateMember(
+        req.params.memberId
+      );
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * GET /organisations/:slug - Member view
+   * Returns: basic org info + simple member list
+   * Access: Any organisation member
+   */
+  getOrganisationMemberView = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      if (!req.params.slug) {
+        throw Errors.notFound();
+      }
+
+      const organisation =
+        await this.organisationService.getOrganisationForMemberView(
+          req.params.slug
+        );
+      res.json(organisation);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * POST /organisations/:slug - Update organisation
+   * Updates organisation details
+   * Access: Admin only
+   */
+  updateOrganisationBySlug = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      if (!req.params.slug || !req.organisationId) {
+        throw Errors.notFound();
+      }
+
+      const validationResult = updateOrganisationSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        throw Errors.validation({ details: formatZodErrors(validationResult) });
+      }
+
+      const organisation =
+        await this.organisationService.updateOrganisationBySlug(
+          req.organisationId,
+          validationResult.data
+        );
       res.json(organisation);
     } catch (error) {
       next(error);
@@ -153,32 +270,6 @@ export class OrganisationController {
         req.params.id
       );
       res.json(result);
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  getOrganisationMembers = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      if (!req.params.slug) {
-        throw Errors.notFound();
-      }
-
-      const session = await auth.api.getSession({
-        headers: fromNodeHeaders(req.headers),
-      });
-      if (!session?.user) {
-        throw Errors.unauthorized();
-      }
-
-      const members = await this.memberService.getMembersByOrganisationSlug(
-        req.params.slug
-      );
-      res.json(members);
     } catch (error) {
       next(error);
     }

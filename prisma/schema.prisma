@@ -37,8 +37,8 @@ model User {
 
   members Member[]
 
-  role       String   @default("user")
-  banned     Boolean? @default(false)
+  role       String    @default("user")
+  banned     Boolean?  @default(false)
   banReason  String?
   banExpires DateTime?
 
