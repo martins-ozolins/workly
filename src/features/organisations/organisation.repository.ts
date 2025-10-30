@@ -5,6 +5,11 @@ import {
 } from "./organisation.validators.js";
 
 export class OrganisationRepository {
+  /**
+   * Query: Find all organisations
+   *
+   * Returns: list of organisations ordered by creation date
+   */
   async findAll() {
     return prisma.organization.findMany({
       orderBy: {
@@ -13,6 +18,11 @@ export class OrganisationRepository {
     });
   }
 
+  /**
+   * Query: Create organisation with admin member
+   *
+   * Returns: newly created organisation with admin member
+   */
   async createWithAdmin(
     data: CreateOrganisationInput,
     currentUser: {
@@ -42,13 +52,12 @@ export class OrganisationRepository {
   }
 
   /**
-   * Get organisation by slug for admin view with full editable data
+   * Get organisation by id for admin view with full editable data
    * Returns: full org data + full member data
    */
-  async findBySlugForAdminView(slug: string) {
-    // TODO: Implement with all fields for admin
+  async findByIdForAdminView(id: string) {
     return prisma.organization.findUnique({
-      where: { slug },
+      where: { id },
       include: {
         members: true,
       },
@@ -62,16 +71,21 @@ export class OrganisationRepository {
   async updateMember(
     memberId: string,
     data: {
-      name?: string;
-      email?: string;
-      role?: "admin" | "hr" | "employee";
-      dept?: string | null;
-      startDate?: string | null;
-      status?: string | "pending";
-      country?: string | null;
+      name: string;
+      email: string;
+      role: "admin" | "hr" | "employee";
+      dept: string | null;
+      startDate: string | null;
+      status:
+        | "active"
+        | "pending"
+        | "vacation"
+        | "paid_leave"
+        | "inactive"
+        | "terminated";
+      country: string | null;
     }
   ) {
-    // TODO: Implement member update logic
     return prisma.member.update({
       where: {
         id: memberId,
@@ -97,13 +111,12 @@ export class OrganisationRepository {
   }
 
   /**
-   * Get organisation by slug for HR management view
+   * Get organisation by id for HR management view
    * Returns: org info (read-only) + full member list with management details
    */
-  async findBySlugForHrView(slug: string) {
-    // TODO: Implement with HR-specific fields
+  async findByIdForHrView(id: string) {
     return prisma.organization.findUnique({
-      where: { slug },
+      where: { id },
       select: {
         id: true,
         name: true,
@@ -139,10 +152,16 @@ export class OrganisationRepository {
       name: string;
       email: string;
       role: "admin" | "hr" | "employee";
-      dept?: string | null;
-      startDate?: string | null;
-      status?: string | "pending";
-      country?: string | null;
+      dept: string | null;
+      startDate: string | null;
+      status:
+        | "active"
+        | "pending"
+        | "vacation"
+        | "paid_leave"
+        | "inactive"
+        | "terminated";
+      country: string | null;
       userId: string | null;
     }
   ) {
@@ -168,7 +187,6 @@ export class OrganisationRepository {
    * Admin-only operation
    */
   async deactivateMember(memberId: string) {
-    // TODO: Implement soft delete
     return prisma.member.update({
       where: {
         id: memberId,
@@ -180,13 +198,12 @@ export class OrganisationRepository {
   }
 
   /**
-   * Get organisation by slug with basic info for member view
+   * Get organisation by id with basic info for member view
    * Returns: basic org fields + simple member list (name, email, role, dept)
    */
-  async findBySlugForMemberView(slug: string) {
-    // TODO: Implement with specific select fields
+  async findByIdForMemberView(id: string) {
     return prisma.organization.findUnique({
-      where: { slug },
+      where: { id },
       select: {
         id: true,
         name: true,
@@ -208,6 +225,11 @@ export class OrganisationRepository {
     });
   }
 
+  /**
+   * Query: Find organisation by ID
+   *
+   * Returns: organisation with all members
+   */
   async findById(id: string) {
     return prisma.organization.findUnique({
       where: { id },
@@ -217,6 +239,11 @@ export class OrganisationRepository {
     });
   }
 
+  /**
+   * Query: Update organisation
+   *
+   * Returns: updated organisation with members
+   */
   async update(id: string, data: UpdateOrganisationInput) {
     return prisma.organization.update({
       where: { id },
@@ -227,6 +254,11 @@ export class OrganisationRepository {
     });
   }
 
+  /**
+   * Query: Delete organisation
+   *
+   * Returns: deleted organisation
+   */
   async delete(id: string) {
     return prisma.organization.delete({
       where: { id },

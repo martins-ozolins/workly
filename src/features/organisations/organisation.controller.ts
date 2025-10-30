@@ -18,6 +18,13 @@ export class OrganisationController {
   private organisationService = new OrganisationService();
   private memberService = new MemberService();
 
+  /**
+   * GET /organisations - Get all organisations
+   *
+   * Returns: list of all organisations
+   *
+   * Access: Authenticated users
+   */
   getAllOrganisations = async (
     req: Request,
     res: Response,
@@ -32,6 +39,13 @@ export class OrganisationController {
     }
   };
 
+  /**
+   * POST /organisations - Create new organisation
+   *
+   * Returns: newly created organisation with admin member
+   *
+   * Access: Authenticated users
+   */
   createOrganisation = async (
     req: Request,
     res: Response,
@@ -48,20 +62,17 @@ export class OrganisationController {
         });
       }
 
-      const session = await auth.api.getSession({
-        headers: fromNodeHeaders(req.headers),
-      });
-      if (!session?.user) {
-        throw Errors.unauthorized();
-      }
+      // retrieve user
+      const user = req.user!;
 
+      // we have req.user and we do check in middleware before
       const organisation =
         await this.organisationService.createOrganisationWithAdmin(
           validationResult.data,
           {
-            userId: session.user.id,
-            email: session.user.email ?? "",
-            name: session.user.name ?? "Admin",
+            userId: user.id,
+            email: user.email ?? "",
+            name: user.name ?? "Admin",
           }
         );
 
@@ -73,7 +84,9 @@ export class OrganisationController {
 
   /**
    * GET /organisations/:slug/admin - Admin full control view
+   *
    * Returns: full org data + full member data (all editable)
+   *
    * Access: Admin only
    */
   getOrganisationAdminView = async (
@@ -82,13 +95,13 @@ export class OrganisationController {
     next: NextFunction
   ) => {
     try {
-      if (!req.params.slug) {
+      if (!req.organisationId) {
         throw Errors.notFound();
       }
 
       const organisation =
         await this.organisationService.getOrganisationForAdminView(
-          req.params.slug
+          req.organisationId
         );
       res.json(organisation);
     } catch (error) {
@@ -107,13 +120,13 @@ export class OrganisationController {
     next: NextFunction
   ) => {
     try {
-      if (!req.params.slug) {
+      if (!req.organisationId) {
         throw Errors.notFound();
       }
 
       const organisation =
         await this.organisationService.getOrganisationForHrView(
-          req.params.slug
+          req.organisationId
         );
       res.json(organisation);
     } catch (error) {
@@ -204,13 +217,13 @@ export class OrganisationController {
     next: NextFunction
   ) => {
     try {
-      if (!req.params.slug) {
+      if (!req.organisationId) {
         throw Errors.notFound();
       }
 
       const organisation =
         await this.organisationService.getOrganisationForMemberView(
-          req.params.slug
+          req.organisationId
         );
       res.json(organisation);
     } catch (error) {
@@ -249,6 +262,13 @@ export class OrganisationController {
     }
   };
 
+  /**
+   * DELETE /organisations/:id - Delete organisation
+   *
+   * Returns: deletion confirmation
+   *
+   * Access: Admin only
+   */
   deleteOrganisation = async (
     req: Request,
     res: Response,

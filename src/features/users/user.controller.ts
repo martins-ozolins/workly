@@ -5,6 +5,13 @@ import { Errors } from "../../shared/errors/AppError.js";
 export class UserController {
   private userService = new UserService();
 
+  /**
+   * GET /users/:id - Get user by ID
+   *
+   * Returns: user details
+   *
+   * Access: Authenticated users
+   */
   getUserById = async (req: Request, res: Response, next: NextFunction) => {
     if (!req.params.id) {
       throw Errors.notFound();
@@ -18,6 +25,13 @@ export class UserController {
     }
   };
 
+  /**
+   * GET /users - Get all users
+   *
+   * Returns: list of all users
+   *
+   * Access: Authenticated users
+   */
   getAllUsers = async (_req: Request, res: Response, next: NextFunction) => {
     try {
       const users = await this.userService.getAllUsers();

@@ -9,10 +9,20 @@ import type { UpdateMemberInput } from "../members/member.validators.js";
 export class OrganisationService {
   private organisationRepository = new OrganisationRepository();
 
+  /**
+   * Get all organisations
+   *
+   * Returns: list of all organisations
+   */
   async getAllOrganisations() {
     return this.organisationRepository.findAll();
   }
 
+  /**
+   * Create new organisation with admin user
+   *
+   * Returns: newly created organisation with admin member
+   */
   async createOrganisationWithAdmin(
     data: CreateOrganisationInput,
     currentUser: {
@@ -29,9 +39,9 @@ export class OrganisationService {
    * Route: GET /:slug/admin
    * Access: Admin only
    */
-  async getOrganisationForAdminView(slug: string) {
+  async getOrganisationForAdminView(id: string) {
     const organisation =
-      await this.organisationRepository.findBySlugForAdminView(slug);
+      await this.organisationRepository.findByIdForAdminView(id);
     if (!organisation) {
       throw new AppError("Organisation not found", 404);
     }
@@ -43,9 +53,9 @@ export class OrganisationService {
    * Route: GET /:slug/members
    * Access: Admin or HR
    */
-  async getOrganisationForHrView(slug: string) {
+  async getOrganisationForHrView(id: string) {
     const organisation =
-      await this.organisationRepository.findBySlugForHrView(slug);
+      await this.organisationRepository.findByIdForHrView(id);
     if (!organisation) {
       throw new AppError("Organisation not found", 404);
     }
@@ -63,10 +73,17 @@ export class OrganisationService {
       name: string;
       email: string;
       role: "admin" | "hr" | "employee";
-      dept?: string | null;
-      startDate?: string | null;
-      country?: string | null;
-      status?: string | "pending";
+      dept: string | null;
+      startDate: string | null;
+      status:
+        | "active"
+        | "pending"
+        | "vacation"
+        | "paid_leave"
+        | "inactive"
+        | "terminated";
+      country: string | null;
+      userId: string | null;
     }
   ) {
     // Check if organisation exists
@@ -105,15 +122,20 @@ export class OrganisationService {
    * Route: GET /:slug
    * Access: Any organisation member
    */
-  async getOrganisationForMemberView(slug: string) {
+  async getOrganisationForMemberView(id: string) {
     const organisation =
-      await this.organisationRepository.findBySlugForMemberView(slug);
+      await this.organisationRepository.findByIdForMemberView(id);
     if (!organisation) {
       throw new AppError("Organisation not found", 404);
     }
     return organisation;
   }
 
+  /**
+   * Delete organisation
+   *
+   * Returns: deletion confirmation message
+   */
   async deleteOrganisation(id: string) {
     const organisation = await this.organisationRepository.findById(id);
     if (!organisation) {

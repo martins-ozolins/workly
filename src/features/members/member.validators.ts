@@ -4,6 +4,11 @@ export const RoleEnum = z.enum(["admin", "hr", "employee"], {
   error: "Invalid role",
 });
 
+export const MemberStatusEnum = z.enum(
+  ["pending", "active", "vacation", "paid_leave", "inactive", "terminated"],
+  { error: "Invalid member status" }
+);
+
 export const createMemberSchema = z.object({
   orgId: z.uuid({ error: "Invalid organisation id" }),
 
@@ -27,9 +32,8 @@ export const createMemberSchema = z.object({
 
   startDate: z.iso.datetime().nullable(),
 
-  status: z
-    .string({ error: "Invalid status" })
-    .max(50, { error: "Status too long" }),
+  status: MemberStatusEnum,
+
   country: z
     .string({ error: "Invalid country" })
     .max(100, { error: "Country name too long" })
@@ -51,9 +55,7 @@ export const updateMemberSchema = z.object({
     .max(100, { error: "Department too long" })
     .nullable(),
   startDate: z.iso.datetime().nullable(),
-  status: z
-    .string({ error: "Invalid status" })
-    .max(50, { error: "Status too long" }),
+  status: MemberStatusEnum,
   country: z
     .string({ error: "Invalid country" })
     .max(100, { error: "Country name too long" })

@@ -99,15 +99,26 @@ model Organization {
   slug      String   @unique
   country   String?
   address   String?
-  plan      String?
+  plan      String   @default("free")
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   members   Member[]
   documents Document[]
   invites   Invite[]
 
   @@index([slug])
+  @@index([id])
   @@map("organization")
+}
+
+enum MemberStatus {
+  pending // invited but not yet joined
+  active // normal active member
+  vacation // temporarily away
+  paid_leave // away but still on payroll
+  inactive // not currently active
+  terminated // permanently removed
 }
 
 model Member {
@@ -121,9 +132,10 @@ model Member {
   email     String
   dept      String?
   startDate DateTime?
-  status    String    @default("active")
+  status    MemberStatus @default(active)
   country   String?
-  createdAt DateTime  @default(now())
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 
   org  Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
   user User?        @relation(fields: [userId], references: [id], onDelete: SetNull)

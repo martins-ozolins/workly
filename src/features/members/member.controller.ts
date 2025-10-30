@@ -9,6 +9,13 @@ import { createMemberSchema, updateMemberSchema } from "./member.validators.js";
 export class MemberController {
   private memberService = new MemberService();
 
+  /**
+   * GET /members/:id - Get member by ID
+   *
+   * Returns: member details
+   *
+   * Access: Authenticated users
+   */
   getMember = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!req.params.id) {
@@ -22,6 +29,13 @@ export class MemberController {
     }
   };
 
+  /**
+   * GET /members - Get all members
+   *
+   * Returns: list of all members
+   *
+   * Access: Authenticated users
+   */
   getAllMembers = async (_req: Request, res: Response, next: NextFunction) => {
     try {
       const members = await this.memberService.getAllMembers();
@@ -31,6 +45,13 @@ export class MemberController {
     }
   };
 
+  /**
+   * GET /members/organisation/:organisationId - Get members by organisation
+   *
+   * Returns: list of members in organisation
+   *
+   * Access: Authenticated users
+   */
   getMembersByOrganisation = async (
     req: Request,
     res: Response,
@@ -50,6 +71,13 @@ export class MemberController {
     }
   };
 
+  /**
+   * GET /members/me - Get current user's memberships
+   *
+   * Returns: list of organisations user is a member of
+   *
+   * Access: Authenticated users
+   */
   getMembersByUser = async (
     req: Request,
     res: Response,
@@ -72,6 +100,13 @@ export class MemberController {
     }
   };
 
+  /**
+   * POST /members - Create new member
+   *
+   * Returns: newly created member
+   *
+   * Access: Admin or HR
+   */
   createMember = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const validationResult = createMemberSchema.safeParse(req.body);
@@ -90,6 +125,13 @@ export class MemberController {
     }
   };
 
+  /**
+   * PATCH /members/:id - Update member
+   *
+   * Returns: updated member details
+   *
+   * Access: Admin or HR
+   */
   updateMember = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!req.params.id) {
@@ -113,6 +155,13 @@ export class MemberController {
     }
   };
 
+  /**
+   * DELETE /members/:id - Delete member
+   *
+   * Returns: deletion confirmation
+   *
+   * Access: Admin only
+   */
   deleteMember = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!req.params.id) {

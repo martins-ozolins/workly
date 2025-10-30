@@ -9,6 +9,13 @@ import { AppError } from "../../shared/errors/AppError.js";
 export class DocumentController {
   private documentService = new DocumentService();
 
+  /**
+   * GET /documents/:id - Get document by ID
+   *
+   * Returns: document details
+   *
+   * Access: Authenticated users
+   */
   getDocument = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const document = await this.documentService.getDocumentById(
@@ -20,6 +27,13 @@ export class DocumentController {
     }
   };
 
+  /**
+   * GET /documents - Get all documents
+   *
+   * Returns: list of all documents
+   *
+   * Access: Authenticated users
+   */
   getAllDocuments = async (
     _req: Request,
     res: Response,
@@ -33,6 +47,13 @@ export class DocumentController {
     }
   };
 
+  /**
+   * GET /documents/member/:memberId - Get documents by member
+   *
+   * Returns: list of documents for specific member
+   *
+   * Access: Authenticated users
+   */
   getDocumentsByMember = async (
     req: Request,
     res: Response,
@@ -48,6 +69,13 @@ export class DocumentController {
     }
   };
 
+  /**
+   * GET /documents/expiring-soon - Get documents expiring soon
+   *
+   * Returns: list of documents expiring within specified days
+   *
+   * Access: Authenticated users
+   */
   getExpiringSoon = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const days = req.query.days ? parseInt(req.query.days as string) : 30;
@@ -59,6 +87,13 @@ export class DocumentController {
     }
   };
 
+  /**
+   * POST /documents - Create new document
+   *
+   * Returns: newly created document
+   *
+   * Access: Admin or HR
+   */
   createDocument = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const validationResult = createDocumentSchema.safeParse(req.body);
@@ -80,6 +115,13 @@ export class DocumentController {
     }
   };
 
+  /**
+   * PATCH /documents/:id - Update document
+   *
+   * Returns: updated document details
+   *
+   * Access: Admin or HR
+   */
   updateDocument = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const validationResult = updateDocumentSchema.safeParse(req.body);
@@ -104,6 +146,13 @@ export class DocumentController {
     }
   };
 
+  /**
+   * DELETE /documents/:id - Delete document
+   *
+   * Returns: deletion confirmation
+   *
+   * Access: Admin only
+   */
   deleteDocument = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await this.documentService.deleteDocument(req.params.id);

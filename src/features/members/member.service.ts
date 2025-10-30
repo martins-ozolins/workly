@@ -1,13 +1,15 @@
 import { MemberRepository } from "./member.repository.js";
 import { AppError } from "../../shared/errors/AppError.js";
-import {
-  CreateMemberForOrgInput,
-  UpdateMemberInput,
-} from "./member.validators.js";
+import { CreateMemberInput, UpdateMemberInput } from "./member.validators.js";
 
 export class MemberService {
   private memberRepository = new MemberRepository();
 
+  /**
+   * Get member by ID
+   *
+   * Returns: member details
+   */
   async getMemberById(id: string) {
     const member = await this.memberRepository.findById(id);
     if (!member) {
@@ -16,30 +18,65 @@ export class MemberService {
     return member;
   }
 
+  /**
+   * Get members by email
+   *
+   * Returns: list of members with matching email
+   */
   async getMembersByEmail(email: string) {
     return this.memberRepository.findByEmail(email);
   }
 
+  /**
+   * Get members by user ID
+   *
+   * Returns: list of memberships for specific user
+   */
   async getMembersByUserId(userId: string) {
     return this.memberRepository.findByUserId(userId);
   }
 
+  /**
+   * Get members by organisation ID
+   *
+   * Returns: list of members in organisation
+   */
   async getMembersByOrganisation(organisationId: string) {
     return this.memberRepository.findByOrganisation(organisationId);
   }
 
+  /**
+   * Get members by organisation slug
+   *
+   * Returns: list of members in organisation
+   */
   async getMembersByOrganisationSlug(slug: string) {
     return this.memberRepository.findByOrganisationSlug(slug);
   }
 
+  /**
+   * Get all members
+   *
+   * Returns: list of all members
+   */
   async getAllMembers() {
     return this.memberRepository.findAll();
   }
 
-  async createMember(data: CreateMemberForOrgInput) {
+  /**
+   * Create new member
+   *
+   * Returns: newly created member
+   */
+  async createMember(data: CreateMemberInput) {
     return this.memberRepository.create(data);
   }
 
+  /**
+   * Update member
+   *
+   * Returns: updated member details
+   */
   async updateMember(id: string, data: UpdateMemberInput) {
     const member = await this.memberRepository.findById(id);
     if (!member) {
@@ -49,6 +86,11 @@ export class MemberService {
     return this.memberRepository.update(id, data);
   }
 
+  /**
+   * Delete member
+   *
+   * Returns: deletion confirmation message
+   */
   async deleteMember(id: string) {
     const member = await this.memberRepository.findById(id);
     if (!member) {

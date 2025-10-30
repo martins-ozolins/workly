@@ -15,11 +15,13 @@ export const createOrganisationSchema = z.object({
         "Slug can only contain lowercase letters, numbers, and dashes (no spaces or special characters)",
     })
     .transform(val => val.toLowerCase()),
+
   country: z
     .string({ error: "Country cannot be empty" })
     .min(1, { error: "Country cannot be empty" })
     .max(100, { error: "Country name too long" })
     .nullable(),
+
   address: z
     .string({ error: "Invalid address" })
     .max(500, { error: "Address too long" })
@@ -41,11 +43,13 @@ export const updateOrganisationSchema = z.object({
         "Slug can only contain lowercase letters, numbers, and dashes (no spaces or special characters)",
     })
     .transform(val => val.toLowerCase()),
+
   country: z
     .string({ error: "Country cannot be empty" })
     .min(1, { error: "Country cannot be empty" })
     .max(100, { error: "Country name too long" })
     .nullable(),
+
   address: z
     .string({ error: "Invalid address" })
     .max(500, { error: "Address too long" })
