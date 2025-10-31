@@ -1,6 +1,5 @@
 import { prisma } from "../../config/prisma.js";
 import type { UpdateMemberDto } from "./member.types.js";
-import { CreateMemberInput } from "./member.validators.js";
 
 export class MemberRepository {
   /**
@@ -64,13 +63,6 @@ export class MemberRepository {
             id: true,
             name: true,
             slug: true,
-          },
-        },
-        user: {
-          select: {
-            id: true,
-            email: true,
-            name: true,
           },
         },
       },
@@ -159,32 +151,6 @@ export class MemberRepository {
     });
   }
 
-  /**
-   * Query: Create new member
-   *
-   * Returns: newly created member with organisation and user details
-   */
-  async create(data: CreateMemberInput) {
-    return prisma.member.create({
-      data,
-      include: {
-        org: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-          },
-        },
-        user: {
-          select: {
-            id: true,
-            email: true,
-            name: true,
-          },
-        },
-      },
-    });
-  }
 
   /**
    * Query: Update member

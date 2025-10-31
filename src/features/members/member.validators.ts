@@ -10,8 +10,6 @@ export const MemberStatusEnum = z.enum(
 );
 
 export const createMemberSchema = z.object({
-  orgId: z.uuid({ error: "Invalid organisation id" }),
-
   userId: z.uuid({ error: "Invalid userId" }).nullable(),
 
   role: RoleEnum,

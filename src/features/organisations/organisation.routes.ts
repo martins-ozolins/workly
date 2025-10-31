@@ -3,7 +3,7 @@ import { OrganisationController } from "./organisation.controller.js";
 import {
   requireAuth,
   requireSystemAdmin,
-} from "src/shared/middleware/auth.middleware.js";
+} from "../../shared/middleware/auth.middleware.js";
 import {
   isOrganisationMember,
   isOrganisationAdmin,
@@ -42,7 +42,12 @@ router.post(
   organisationController.addNewMember
 );
 
-// TODO: add /:slug/members/:memberId GET route when updating single user to load view data
+router.get(
+  "/:slug/members/:memberId",
+  requireAuth,
+  isOrganisationAdminOrHr,
+  organisationController.getMemberForEditing
+);
 
 router.post(
   "/:slug/members/:memberId",
@@ -66,7 +71,7 @@ router.get(
   organisationController.getOrganisationMemberView
 );
 
-// Organisation updates (admin only)
+// Organisation updates (org admin only)
 router.post(
   "/:slug",
   requireAuth,

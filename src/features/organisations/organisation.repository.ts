@@ -65,6 +65,38 @@ export class OrganisationRepository {
   }
 
   /**
+   * Get single member by ID for editing
+   * Returns: full member data for form population
+   */
+  async findMemberById(memberId: string, orgId: string) {
+    return prisma.member.findFirst({
+      where: {
+        id: memberId,
+        orgId: orgId,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        dept: true,
+        startDate: true,
+        status: true,
+        country: true,
+        userId: true,
+        createdAt: true,
+        org: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
+      },
+    });
+  }
+
+  /**
    * Update member by member.id
    * Used for updating member information by admins/HR
    */
@@ -167,8 +199,8 @@ export class OrganisationRepository {
   ) {
     return prisma.member.create({
       data: {
-        orgId,
         ...data,
+        orgId,
       },
       include: {
         org: {

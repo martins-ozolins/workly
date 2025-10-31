@@ -135,9 +135,38 @@ export class OrganisationController {
   };
 
   /**
-   * POST /organisations/:slug/members - add new member
-   * Creates invitation for new member
+   * GET /organisations/:slug/members/:memberId - Get single member for editing
+   *
+   * Returns: member data for form population
+   *
    * Access: Admin or HR
+   */
+  getMemberForEditing = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      if (!req.params.slug || !req.params.memberId || !req.organisationId) {
+        throw Errors.notFound();
+      }
+
+      const member = await this.organisationService.getMemberForEditing(
+        req.params.memberId,
+        req.organisationId
+      );
+      res.json(member);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * POST /organisations/:slug/members - add new member
+   *
+   * Creates invitation for new member
+   *
+   b* Access: Admin or HR
    */
   addNewMember = async (req: Request, res: Response, next: NextFunction) => {
     try {

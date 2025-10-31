@@ -1,5 +1,5 @@
 import { OrganisationRepository } from "./organisation.repository.js";
-import { AppError } from "../../shared/errors/AppError.js";
+import { Errors } from "../../shared/errors/AppError.js";
 import {
   CreateOrganisationInput,
   UpdateOrganisationInput,
@@ -43,7 +43,7 @@ export class OrganisationService {
     const organisation =
       await this.organisationRepository.findByIdForAdminView(id);
     if (!organisation) {
-      throw new AppError("Organisation not found", 404);
+      throw Errors.notFound({ message: "Organisation not found" });
     }
     return organisation;
   }
@@ -57,7 +57,7 @@ export class OrganisationService {
     const organisation =
       await this.organisationRepository.findByIdForHrView(id);
     if (!organisation) {
-      throw new AppError("Organisation not found", 404);
+      throw Errors.notFound({ message: "Organisation not found" });
     }
     return organisation;
   }
@@ -89,7 +89,7 @@ export class OrganisationService {
     // Check if organisation exists
     const organisation = await this.organisationRepository.findById(orgId);
     if (!organisation) {
-      throw new AppError("Organisation not found", 404);
+      throw Errors.notFound({ message: "Organisation not found" });
     }
 
     // Add member
@@ -97,6 +97,22 @@ export class OrganisationService {
       ...data,
       userId: null,
     });
+  }
+
+  /**
+   * Get single member for editing
+   * Route: GET /:slug/members/:memberId
+   * Access: Admin or HR
+   */
+  async getMemberForEditing(memberId: string, orgId: string) {
+    const member = await this.organisationRepository.findMemberById(
+      memberId,
+      orgId
+    );
+    if (!member) {
+      throw Errors.notFound({ message: "Member not found" });
+    }
+    return member;
   }
 
   /**
@@ -126,7 +142,7 @@ export class OrganisationService {
     const organisation =
       await this.organisationRepository.findByIdForMemberView(id);
     if (!organisation) {
-      throw new AppError("Organisation not found", 404);
+      throw Errors.notFound({ message: "Organisation not found" });
     }
     return organisation;
   }
@@ -139,7 +155,7 @@ export class OrganisationService {
   async deleteOrganisation(id: string) {
     const organisation = await this.organisationRepository.findById(id);
     if (!organisation) {
-      throw new AppError("Organisation not found", 404);
+      throw Errors.notFound({ message: "Organisation not found" });
     }
 
     await this.organisationRepository.delete(id);
@@ -154,7 +170,7 @@ export class OrganisationService {
   async updateOrganisationBySlug(id: string, data: UpdateOrganisationInput) {
     const organisation = await this.organisationRepository.findById(id);
     if (!organisation) {
-      throw new AppError("Organisation not found", 404);
+      throw Errors.notFound({ message: "Organisation not found" });
     }
 
     return this.organisationRepository.update(id, data);

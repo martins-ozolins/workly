@@ -5,7 +5,10 @@ import { fromNodeHeaders } from "better-auth/node";
 
 /**
  * Middleware to protect routes that require authentication
+ *
  * Uses better-auth to verify the session
+ *
+ * Sets req.user
  */
 export const requireAuth = async (
   req: Request,

@@ -1,6 +1,6 @@
 import { MemberRepository } from "./member.repository.js";
 import { AppError } from "../../shared/errors/AppError.js";
-import { CreateMemberInput, UpdateMemberInput } from "./member.validators.js";
+import { UpdateMemberInput } from "./member.validators.js";
 
 export class MemberService {
   private memberRepository = new MemberRepository();
@@ -61,15 +61,6 @@ export class MemberService {
    */
   async getAllMembers() {
     return this.memberRepository.findAll();
-  }
-
-  /**
-   * Create new member
-   *
-   * Returns: newly created member
-   */
-  async createMember(data: CreateMemberInput) {
-    return this.memberRepository.create(data);
   }
 
   /**
