@@ -10,13 +10,9 @@ import {
 } from "../members/member.validators.js";
 import { Errors } from "../../shared/errors/AppError.js";
 import { formatZodErrors } from "../../utils/formatZodErrors.js";
-import { auth } from "../../lib/auth.js";
-import { fromNodeHeaders } from "better-auth/node";
-import { MemberService } from "../members/member.service.js";
 
 export class OrganisationController {
   private organisationService = new OrganisationService();
-  private memberService = new MemberService();
 
   /**
    * GET /organisations - Get all organisations
@@ -329,7 +325,7 @@ export class OrganisationController {
   };
 
   /**
-   * DELETE /organisations/:id - Delete organisation
+   * DELETE /organisations/:slug - Delete organisation
    *
    * Returns: deletion confirmation
    *
@@ -342,19 +338,12 @@ export class OrganisationController {
   ) => {
     try {
       // Check required data from middleware
-      if (!req.params.id) {
+      if (!req.organisationId) {
         throw Errors.notFound();
       }
 
-      const session = await auth.api.getSession({
-        headers: fromNodeHeaders(req.headers),
-      });
-      if (!session?.user) {
-        throw Errors.unauthorized();
-      }
-
       const result = await this.organisationService.deleteOrganisation(
-        req.params.id
+        req.organisationId
       );
       res.json(result);
     } catch (error) {

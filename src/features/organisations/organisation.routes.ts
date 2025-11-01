@@ -83,4 +83,12 @@ router.post(
   organisationController.updateOrganisationBySlug
 );
 
+// Organisation deletion (Admin only)
+router.delete(
+  "/:slug",
+  requireAuth,
+  isOrganisationAdmin,
+  organisationController.deleteOrganisation
+);
+
 export default router;
