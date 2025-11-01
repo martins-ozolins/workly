@@ -19,12 +19,12 @@ router.get("/", requireSystemAdmin, organisationController.getAllOrganisations);
 // organisation creation (authenticated users)
 router.post("/", requireAuth, organisationController.createOrganisation);
 
-// admin view - full control
+// settings view - org configuration (admin only)
 router.get(
-  "/:slug/admin",
+  "/:slug/settings",
   requireAuth,
   isOrganisationAdmin,
-  organisationController.getOrganisationAdminView
+  organisationController.getOrganisationSettingsView
 );
 
 // HR/Admin member management routes
@@ -32,9 +32,10 @@ router.get(
   "/:slug/members",
   requireAuth,
   isOrganisationAdminOrHr,
-  organisationController.getOrganisationHrView
+  organisationController.getOrganisationMembersView
 );
 
+// HR/Admin member creation route
 router.post(
   "/:slug/members",
   requireAuth,
@@ -42,6 +43,7 @@ router.post(
   organisationController.addNewMember
 );
 
+// Member edit view (Admin/HR only)
 router.get(
   "/:slug/members/:memberId",
   requireAuth,
@@ -49,6 +51,7 @@ router.get(
   organisationController.getMemberForEditing
 );
 
+// Member edit post route (Admin/HR only)
 router.post(
   "/:slug/members/:memberId",
   requireAuth,
@@ -56,11 +59,12 @@ router.post(
   organisationController.updateMember
 );
 
+// Member deactivate route (Admin/HR only)
 router.delete(
   "/:slug/members/:memberId",
   requireAuth,
   isOrganisationAdmin,
-  organisationController.deleteMember
+  organisationController.deactivateMember
 );
 
 // Member view - basic org info
@@ -71,9 +75,9 @@ router.get(
   organisationController.getOrganisationMemberView
 );
 
-// Organisation updates (org admin only)
+// Organisation updates (Admin only)
 router.post(
-  "/:slug",
+  "/:slug/settings",
   requireAuth,
   isOrganisationAdmin,
   organisationController.updateOrganisationBySlug

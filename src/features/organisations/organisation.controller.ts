@@ -83,13 +83,13 @@ export class OrganisationController {
   };
 
   /**
-   * GET /organisations/:slug/admin - Admin full control view
+   * GET /organisations/:slug/settings - Settings view
    *
-   * Returns: full org data + full member data (all editable)
+   * Returns: full org data for configuration/settings
    *
    * Access: Admin only
    */
-  getOrganisationAdminView = async (
+  getOrganisationSettingsView = async (
     req: Request,
     res: Response,
     next: NextFunction
@@ -100,7 +100,7 @@ export class OrganisationController {
       }
 
       const organisation =
-        await this.organisationService.getOrganisationForAdminView(
+        await this.organisationService.getOrganisationForSettingsView(
           req.organisationId
         );
       res.json(organisation);
@@ -110,23 +110,30 @@ export class OrganisationController {
   };
 
   /**
-   * GET /organisations/:slug/members - HR management view
+   * GET /organisations/:slug/members - Member management view
+   *
    * Returns: org info + full member list with management details
-   * Access: Admin or HR only
+   *
+   * Access: Admin or HR only (returned data depends on the role)
    */
-  getOrganisationHrView = async (
+  getOrganisationMembersView = async (
     req: Request,
     res: Response,
     next: NextFunction
   ) => {
     try {
-      if (!req.organisationId) {
+      if (!req.organisationId || !req.member) {
         throw Errors.notFound();
       }
 
+      // Get member role from middleware
+      const userRole = req.member.role as "admin" | "hr";
+
+      // Service will return appropriate data based on role
       const organisation =
-        await this.organisationService.getOrganisationForHrView(
-          req.organisationId
+        await this.organisationService.getOrganisationForMembersView(
+          req.organisationId,
+          userRole
         );
       res.json(organisation);
     } catch (error) {
@@ -220,7 +227,11 @@ export class OrganisationController {
    * Soft deletes member (sets status to inactive)
    * Access: Admin only
    */
-  deleteMember = async (req: Request, res: Response, next: NextFunction) => {
+  deactivateMember = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       if (!req.params.slug || !req.params.memberId || !req.organisationId) {
         throw Errors.notFound();

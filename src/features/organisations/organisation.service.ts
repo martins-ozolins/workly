@@ -35,11 +35,11 @@ export class OrganisationService {
   }
 
   /**
-   * Get organisation for admin view (full editable data)
-   * Route: GET /:slug/admin
+   * Get organisation for settings view (full org data for configuration)
+   * Route: GET /:slug/settings
    * Access: Admin only
    */
-  async getOrganisationForAdminView(id: string) {
+  async getOrganisationForSettingsView(id: string) {
     const organisation =
       await this.organisationRepository.findByIdForAdminView(id);
     if (!organisation) {
@@ -49,22 +49,38 @@ export class OrganisationService {
   }
 
   /**
-   * Get organisation for HR view (org info + full member list)
+   * Get organisation for members management view
    * Route: GET /:slug/members
    * Access: Admin or HR
+   *
+   * @param id - Organisation ID
+   * @param userRole - Current user's role (admin or hr)
+   *
+   * Returns different data based on role
    */
-  async getOrganisationForHrView(id: string) {
-    const organisation =
-      await this.organisationRepository.findByIdForHrView(id);
+  async getOrganisationForMembersView(id: string, userRole: "admin" | "hr") {
+    let organisation;
+
+    if (userRole === "admin") {
+      // Admins get full org data (including sensitive fields if any)
+      organisation = await this.organisationRepository.findByIdForAdminView(id);
+    } else {
+      // HR gets read-only org info but full member list
+      organisation = await this.organisationRepository.findByIdForHrView(id);
+    }
+
     if (!organisation) {
       throw Errors.notFound({ message: "Organisation not found" });
     }
+
     return organisation;
   }
 
   /**
    * add new member to organisation
+   *
    * Route: POST /:slug/members
+   *
    * Access: Admin or HR
    */
   async addNewMember(
