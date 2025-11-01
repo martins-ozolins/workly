@@ -200,3 +200,81 @@ export const isOrganisationAdminOrHr = async (
     }
   }
 };
+
+/**
+ * Middleware to check if the authenticated user is an admin, HR, or accessing their own member record
+ *
+ * Requires req.user to be set (use requireAuth first)
+ *
+ * Expects :slug and :memberId params in the route
+ */
+export const isOrganisationAdminOrHrOrSelf = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    if (!req.user) {
+      throw Errors.unauthorized();
+    }
+
+    const { slug, memberId } = req.params;
+    if (!slug) {
+      throw Errors.notFound({ message: "Organisation slug is required" });
+    }
+    if (!memberId) {
+      throw Errors.notFound({ message: "Member ID is required" });
+    }
+
+    // Find the organisation by slug
+    const organisation = await prisma.organization.findUnique({
+      where: { slug },
+      select: { id: true },
+    });
+
+    if (!organisation) {
+      throw Errors.notFound({ message: "Organisation not found" });
+    }
+
+    // Check if user is a member of this organisation
+    const userMember = await prisma.member.findFirst({
+      where: {
+        orgId: organisation.id,
+        userId: req.user.id,
+        status: "active",
+      },
+      select: {
+        id: true,
+        role: true,
+      },
+    });
+
+    if (!userMember) {
+      throw Errors.forbidden({
+        message: "You are not a member of this organisation",
+      });
+    }
+
+    // Check if user is admin/HR OR accessing their own member record
+    const isAdminOrHr = ["admin", "hr"].includes(userMember.role);
+    const isOwnRecord = userMember.id === memberId;
+
+    if (!isAdminOrHr && !isOwnRecord) {
+      throw Errors.forbidden({
+        message: "You can only access your own profile or require admin/HR privileges",
+      });
+    }
+
+    // Attach organisation and member info to request for use in controllers
+    req.organisationId = organisation.id;
+    req.member = userMember;
+
+    next();
+  } catch (error) {
+    if (error instanceof AppError) {
+      next(error);
+    } else {
+      next(new AppError("Failed to verify access permissions", 500));
+    }
+  }
+};

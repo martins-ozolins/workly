@@ -8,6 +8,7 @@ import {
   isOrganisationMember,
   isOrganisationAdmin,
   isOrganisationAdminOrHr,
+  isOrganisationAdminOrHrOrSelf,
 } from "./organisation.middleware.js";
 
 const router = Router();
@@ -43,19 +44,19 @@ router.post(
   organisationController.addNewMember
 );
 
-// Member edit view (Admin/HR only)
+// Member edit view (Admin/HR or own profile)
 router.get(
   "/:slug/members/:memberId",
   requireAuth,
-  isOrganisationAdminOrHr,
+  isOrganisationAdminOrHrOrSelf,
   organisationController.getMemberForEditing
 );
 
-// Member edit post route (Admin/HR only)
+// Member edit post route (Admin/HR or own profile)
 router.post(
   "/:slug/members/:memberId",
   requireAuth,
-  isOrganisationAdminOrHr,
+  isOrganisationAdminOrHrOrSelf,
   organisationController.updateMember
 );
 
