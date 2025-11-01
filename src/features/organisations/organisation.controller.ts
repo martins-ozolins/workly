@@ -23,7 +23,7 @@ export class OrganisationController {
    *
    * Returns: list of all organisations
    *
-   * Access: Authenticated users
+   * Access: System admin only
    */
   getAllOrganisations = async (
     req: Request,
@@ -52,20 +52,20 @@ export class OrganisationController {
     next: NextFunction
   ) => {
     try {
-      // validate data
+      // Validate data
       const validationResult = createOrganisationSchema.safeParse(req.body);
 
-      // throw error with validation results
+      // Throw error with validation results
       if (!validationResult.success) {
         throw Errors.validation({
           details: formatZodErrors(validationResult),
         });
       }
 
-      // retrieve user
+      // Retrieve user
       const user = req.user!;
 
-      // we have req.user and we do check in middleware before
+      // We have req.user and we do check in middleware before
       const organisation =
         await this.organisationService.createOrganisationWithAdmin(
           validationResult.data,
@@ -87,22 +87,25 @@ export class OrganisationController {
    *
    * Returns: full org data for configuration/settings
    *
-   * Access: Admin only
+   * Access: Organisation admin only
    */
   getOrganisationSettingsView = async (
     req: Request,
     res: Response,
     next: NextFunction
   ) => {
+    // Check if organisation ID provided
     try {
       if (!req.organisationId) {
         throw Errors.notFound();
       }
 
+      // Call service with organisation ID
       const organisation =
         await this.organisationService.getOrganisationForSettingsView(
           req.organisationId
         );
+
       res.json(organisation);
     } catch (error) {
       next(error);
@@ -114,7 +117,7 @@ export class OrganisationController {
    *
    * Returns: org info + full member list with management details
    *
-   * Access: Admin or HR only (returned data depends on the role)
+   * Access: Organisation Admin or HR only (returned data depends on the role)
    */
   getOrganisationMembersView = async (
     req: Request,
@@ -146,18 +149,20 @@ export class OrganisationController {
    *
    * Returns: member data for form population
    *
-   * Access: Admin or HR
+   * Access: Organisation Admin or HR
    */
   getMemberForEditing = async (
     req: Request,
     res: Response,
     next: NextFunction
   ) => {
+    // Check required data from middleware
     try {
       if (!req.params.slug || !req.params.memberId || !req.organisationId) {
         throw Errors.notFound();
       }
 
+      // Call service with member ID + organisation ID
       const member = await this.organisationService.getMemberForEditing(
         req.params.memberId,
         req.organisationId
@@ -171,21 +176,24 @@ export class OrganisationController {
   /**
    * POST /organisations/:slug/members - add new member
    *
-   * Creates invitation for new member
+   * Creates a new member
    *
-   b* Access: Admin or HR
+   * Access: Organisation Admin or HR
    */
   addNewMember = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      // Check required data from middleware
       if (!req.params.slug || !req.organisationId) {
         throw Errors.notFound();
       }
 
+      // Validates body data based on Zod schema for member creation
       const validationResult = createMemberSchema.safeParse(req.body);
       if (!validationResult.success) {
         throw Errors.validation({ details: formatZodErrors(validationResult) });
       }
 
+      // Call service with organisation ID + new member data
       const invite = await this.organisationService.addNewMember(
         req.organisationId,
         validationResult.data
@@ -198,20 +206,25 @@ export class OrganisationController {
 
   /**
    * POST /organisations/:slug/members/:memberId - Update member
+   *
    * Updates member information
-   * Access: Admin or HR
+   *
+   * Access: Organisation Admin or HR
    */
   updateMember = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      // Check required data from middleware
       if (!req.params.slug || !req.params.memberId || !req.organisationId) {
         throw Errors.notFound();
       }
 
+      // Validates body data based on Zod schema for member update
       const validationResult = updateMemberSchema.safeParse(req.body);
       if (!validationResult.success) {
         throw Errors.validation({ details: formatZodErrors(validationResult) });
       }
 
+      // Call service with organisation ID + updated member data
       const member = await this.organisationService.updateMember(
         req.params.memberId,
         validationResult.data
@@ -224,19 +237,23 @@ export class OrganisationController {
 
   /**
    * DELETE /organisations/:slug/members/:memberId - Deactivate member
-   * Soft deletes member (sets status to inactive)
-   * Access: Admin only
+   *
+   * Deactivate member (sets status to inactive)
+   *
+   * Access: Organisation Admin only
    */
   deactivateMember = async (
     req: Request,
     res: Response,
     next: NextFunction
   ) => {
+    // Check required data from middleware
     try {
       if (!req.params.slug || !req.params.memberId || !req.organisationId) {
         throw Errors.notFound();
       }
 
+      // Call service with member ID
       const result = await this.organisationService.deactivateMember(
         req.params.memberId
       );
@@ -248,7 +265,9 @@ export class OrganisationController {
 
   /**
    * GET /organisations/:slug - Member view
+   *
    * Returns: basic org info + simple member list
+   *
    * Access: Any organisation member
    */
   getOrganisationMemberView = async (
@@ -257,10 +276,12 @@ export class OrganisationController {
     next: NextFunction
   ) => {
     try {
+      // Check required data from middleware
       if (!req.organisationId) {
         throw Errors.notFound();
       }
 
+      // Call service with organisation ID
       const organisation =
         await this.organisationService.getOrganisationForMemberView(
           req.organisationId
@@ -273,8 +294,10 @@ export class OrganisationController {
 
   /**
    * POST /organisations/:slug - Update organisation
+   *
    * Updates organisation details
-   * Access: Admin only
+   *
+   * Access: Organisatiaon Admin only
    */
   updateOrganisationBySlug = async (
     req: Request,
@@ -282,15 +305,18 @@ export class OrganisationController {
     next: NextFunction
   ) => {
     try {
+      // Check required data from middleware
       if (!req.params.slug || !req.organisationId) {
         throw Errors.notFound();
       }
 
+      // Validate data based on Zod schema
       const validationResult = updateOrganisationSchema.safeParse(req.body);
       if (!validationResult.success) {
         throw Errors.validation({ details: formatZodErrors(validationResult) });
       }
 
+      // Call service to update organisation
       const organisation =
         await this.organisationService.updateOrganisationBySlug(
           req.organisationId,
@@ -307,7 +333,7 @@ export class OrganisationController {
    *
    * Returns: deletion confirmation
    *
-   * Access: Admin only
+   * Access: Organisation Admin only
    */
   deleteOrganisation = async (
     req: Request,
@@ -315,6 +341,7 @@ export class OrganisationController {
     next: NextFunction
   ) => {
     try {
+      // Check required data from middleware
       if (!req.params.id) {
         throw Errors.notFound();
       }

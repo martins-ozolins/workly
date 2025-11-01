@@ -4,7 +4,9 @@ import { prisma } from "../../config/prisma.js";
 
 /**
  * Middleware to check if the authenticated user is a member of the organisation
+ *
  * Requires req.user to be set (use requireAuth first)
+ *
  * Expects :slug param in the route
  */
 export const isOrganisationMember = async (
@@ -51,7 +53,7 @@ export const isOrganisationMember = async (
       });
     }
 
-    // Attach organisation and member info to request for use in controllers
+    // Attach organisation and member info to request for use in controllers and services
     req.organisationId = organisation.id;
     req.member = member;
 
@@ -67,7 +69,9 @@ export const isOrganisationMember = async (
 
 /**
  * Middleware to check if the authenticated user is an admin of the organisation
+ *
  * Requires req.user to be set (use requireAuth first)
+ *
  * Expects :slug param in the route
  */
 export const isOrganisationAdmin = async (
@@ -131,7 +135,9 @@ export const isOrganisationAdmin = async (
 
 /**
  * Middleware to check if the authenticated user is an admin or HR of the organisation
+ *
  * Requires req.user to be set (use requireAuth first)
+ *
  * Expects :slug param in the route
  */
 export const isOrganisationAdminOrHr = async (
