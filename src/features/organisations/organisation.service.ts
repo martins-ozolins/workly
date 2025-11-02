@@ -134,9 +134,9 @@ export class OrganisationService {
   /**
    * Update member information
    * Route: POST /:slug/members/:memberId
-   * Access: Admin or HR
+   * Access: Admin or HR (full update) or Self (partial update)
    */
-  async updateMember(memberId: string, data: UpdateMemberInput) {
+  async updateMember(memberId: string, data: Partial<UpdateMemberInput>) {
     return this.organisationRepository.updateMember(memberId, data);
   }
 

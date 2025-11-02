@@ -7,6 +7,7 @@ import {
 import {
   createMemberSchema,
   updateMemberSchema,
+  updateMemberSelfSchema,
 } from "../members/member.validators.js";
 import { Errors } from "../../shared/errors/AppError.js";
 import { formatZodErrors } from "../../utils/formatZodErrors.js";
@@ -205,17 +206,23 @@ export class OrganisationController {
    *
    * Updates member information
    *
-   * Access: Organisation Admin or HR
+   * Access: Organisation Admin or HR (full update) or Self (name only)
    */
   updateMember = async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Check required data from middleware
-      if (!req.params.slug || !req.params.memberId || !req.organisationId) {
+      if (!req.params.slug || !req.params.memberId || !req.organisationId || !req.member) {
         throw Errors.notFound();
       }
 
+      // Determine if user is admin/HR or updating their own profile
+      const isAdminOrHr = ["admin", "hr"].includes(req.member.role);
+
+      // Use appropriate schema based on role
+      const schema = isAdminOrHr ? updateMemberSchema : updateMemberSelfSchema;
+
       // Validates body data based on Zod schema for member update
-      const validationResult = updateMemberSchema.safeParse(req.body);
+      const validationResult = schema.safeParse(req.body);
       if (!validationResult.success) {
         throw Errors.validation({ details: formatZodErrors(validationResult) });
       }

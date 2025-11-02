@@ -14,7 +14,7 @@ import {
   headObject,
 } from "../../lib/s3-helpers.js";
 import { DocType } from "@prisma/client";
-import { Errors } from "src/shared/errors/AppError.js";
+import { Errors } from "../../shared/errors/AppError.js";
 
 export class DocumentService {
   private documentRepository = new DocumentRepository();

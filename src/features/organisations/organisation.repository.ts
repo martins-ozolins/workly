@@ -3,6 +3,7 @@ import {
   CreateOrganisationInput,
   UpdateOrganisationInput,
 } from "./organisation.validators.js";
+import type { UpdateMemberInput } from "../members/member.validators.js";
 
 export class OrganisationRepository {
   /**
@@ -98,26 +99,9 @@ export class OrganisationRepository {
 
   /**
    * Update member by member.id
-   * Used for updating member information by admins/HR
+   * Used for updating member information by admins/HR or self (partial updates allowed)
    */
-  async updateMember(
-    memberId: string,
-    data: {
-      name: string;
-      email: string;
-      role: "admin" | "hr" | "employee";
-      dept: string | null;
-      startDate: string | null;
-      status:
-        | "active"
-        | "pending"
-        | "vacation"
-        | "paid_leave"
-        | "inactive"
-        | "terminated";
-      country: string | null;
-    }
-  ) {
+  async updateMember(memberId: string, data: Partial<UpdateMemberInput>) {
     return prisma.member.update({
       where: {
         id: memberId,

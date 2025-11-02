@@ -60,5 +60,14 @@ export const updateMemberSchema = z.object({
     .nullable(),
 });
 
+// Schema for members updating their own profile (only name allowed)
+export const updateMemberSelfSchema = z.object({
+  name: z
+    .string({ error: "Name is required" })
+    .min(1, { error: "Name is required" })
+    .max(255, { error: "Name must be at most 255 characters" }),
+});
+
 export type CreateMemberInput = z.infer<typeof createMemberSchema>;
 export type UpdateMemberInput = z.infer<typeof updateMemberSchema>;
+export type UpdateMemberSelfInput = z.infer<typeof updateMemberSelfSchema>;
