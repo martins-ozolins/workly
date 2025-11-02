@@ -261,7 +261,8 @@ export const isOrganisationAdminOrHrOrSelf = async (
 
     if (!isAdminOrHr && !isOwnRecord) {
       throw Errors.forbidden({
-        message: "You can only access your own profile or require admin/HR privileges",
+        message:
+          "You can only access your own profile or require admin/HR privileges",
       });
     }
 

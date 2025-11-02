@@ -1,0 +1,11 @@
+dist
+node_modules
+coverage
+logs
+prisma/migrations
+prisma/generated
+prisma/client
+src/generated/prisma
+package-lock.json
+documents
+*.log

@@ -1,53 +1,127 @@
 import { prisma } from "../../config/prisma.js";
-import type { CreateDocumentDto } from "./document.types.js";
+import type {
+  CompleteDocumentUploadDto,
+  CreateDocumentDto,
+  DeleteDocumentDto,
+  GetDocumentDto,
+  GetDocumentsDto,
+} from "./document.types.js";
 
 export class DocumentRepository {
   /**
-   * Query: Create new document
-   *
-   * Inserts document metadata after S3 upload
-   *
-   * Returns: newly created document with member details
+   * Creates document record with PENDING status
+   * Returns: created document
    */
   async createDocument(data: CreateDocumentDto) {
-    // TODO: Implement document creation
-    // Insert document record with S3 URL and metadata
-    throw new Error("createDocument query not implemented yet");
+    return await prisma.document.create({
+      data: {
+        s3Key: data.s3Key,
+        fileName: data.fileName,
+        fileType: data.fileType,
+        documentType: data.documentType,
+        status: data.status,
+        orgId: data.orgId,
+        memberId: data.memberId,
+      },
+    });
   }
 
   /**
-   * Query: Find document by ID with member and org validation
-   *
-   * Returns: document with member and organisation details
+   * Marks document as READY, sets file size
+   * Returns: updated document
    */
-  async findByIdWithMember(documentId: string, memberId: string) {
-    // TODO: Implement find by ID with member validation
-    // Query document where id = documentId AND memberId = memberId
-    // Include member and organisation for validation
-    throw new Error("findByIdWithMember query not implemented yet");
+  async completeDocumentUpload(data: CompleteDocumentUploadDto) {
+    return await prisma.document.update({
+      where: { id: data.documentId },
+      data: { status: "READY", fileSize: data.fileSize },
+    });
   }
 
   /**
-   * Query: Delete document by ID
-   *
-   * Returns: deleted document
+   * Marks document as FAILED
+   * Returns: updated document
    */
-  async deleteById(documentId: string) {
-    // TODO: Implement document deletion
-    // Delete document record where id = documentId
-    throw new Error("deleteById query not implemented yet");
+  async markDocumentAsFailed(documentId: string) {
+    return await prisma.document.update({
+      where: { id: documentId },
+      data: { status: "FAILED" },
+    });
   }
 
   /**
-   * Query: Verify member belongs to organisation
-   *
-   * Helper query to validate organisation-member relationship
-   *
-   * Returns: boolean indicating if member belongs to org
+   * Finds document by ID
+   * Returns: document or null
    */
-  async verifyMemberInOrganisation(memberId: string, organisationSlug: string) {
-    // TODO: Implement member-organisation verification
-    // Query member where id = memberId AND organisation.slug = slug
-    throw new Error("verifyMemberInOrganisation query not implemented yet");
+  async findById(documentId: string) {
+    return await prisma.document.findUnique({
+      where: { id: documentId },
+    });
+  }
+
+  /**
+   * Finds document with member and org validation
+   * Returns: document or null
+   */
+  async findDocument(data: GetDocumentDto) {
+    return await prisma.document.findUnique({
+      where: {
+        id: data.documentId,
+        memberId: data.memberId,
+        orgId: data.organisationId,
+      },
+    });
+  }
+
+  /**
+   * Lists all READY documents for a member
+   * Returns: array of documents
+   */
+  async findDocumentsByMember(data: GetDocumentsDto) {
+    return await prisma.document.findMany({
+      where: {
+        memberId: data.memberId,
+        orgId: data.organisationId,
+        status: "READY",
+      },
+      select: {
+        id: true,
+        fileName: true,
+        fileType: true,
+        documentType: true,
+        createdAt: true,
+        updatedAt: true,
+        orgId: false,
+        memberId: false,
+        s3Key: false,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  }
+
+  /**
+   * Finds document with member and org validation for deletion
+   * Returns: document or null
+   */
+  async findDocumentToDelete(data: DeleteDocumentDto) {
+    return await prisma.document.findUnique({
+      where: {
+        id: data.documentId,
+        memberId: data.memberId,
+        orgId: data.organisationId,
+      },
+    });
+  }
+
+  /**
+   * Marks document as DELETED
+   * Returns: updated document
+   */
+  async markDocumentAsDeleted(documentId: string) {
+    return await prisma.document.update({
+      where: { id: documentId },
+      data: { status: "DELETED" },
+    });
   }
 }

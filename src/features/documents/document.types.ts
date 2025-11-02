@@ -1,3 +1,5 @@
+import type { DocType, DocumentStatus } from "@prisma/client";
+
 export interface Document {
   id: string;
   name: string;
@@ -11,17 +13,42 @@ export interface Document {
 }
 
 export interface CreateDocumentDto {
-  name: string;
-  type: string;
   s3Key: string;
+  fileName: string;
+  fileType: string;
+  documentType: DocType;
+  status: DocumentStatus;
+  orgId: string;
   memberId: string;
-  expiresAt?: Date;
 }
 
 export interface UploadDocumentDto {
-  file: File;
-  name: string;
-  type: string;
+  fileName: string;
+  fileType: string;
+  documentType: string;
   memberId: string;
-  expiresAt?: Date;
+  orgId: string;
+}
+
+export interface CompleteDocumentUploadDto {
+  documentId: string;
+  status: string;
+  fileSize: number;
+}
+
+export interface GetDocumentDto {
+  documentId: string;
+  memberId: string;
+  organisationId: string;
+}
+
+export interface GetDocumentsDto {
+  memberId: string;
+  organisationId: string;
+}
+
+export interface DeleteDocumentDto {
+  documentId: string;
+  memberId: string;
+  organisationId: string;
 }

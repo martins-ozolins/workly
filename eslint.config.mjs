@@ -13,7 +13,6 @@ export default defineConfig([
       "logs/**",
       "prisma/migrations/**",
       "prisma/generated/**",
-      "vitest.config.ts",
       "prisma/client/**",
       "src/generated/prisma/**",
       "documents/",

@@ -151,7 +151,6 @@ export class MemberRepository {
     });
   }
 
-
   /**
    * Query: Update member
    *

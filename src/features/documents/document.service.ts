@@ -1,61 +1,138 @@
 import { DocumentRepository } from "./document.repository.js";
-import type { UploadDocumentDto } from "./document.types.js";
+import type {
+  DeleteDocumentDto,
+  GetDocumentDto,
+  GetDocumentsDto,
+  UploadDocumentDto,
+} from "./document.types.js";
+import path from "node:path";
+import { randomUUID } from "node:crypto";
+import {
+  deleteObject,
+  getPresignedGetUrl,
+  getPresignedPutUrl,
+  headObject,
+} from "../../lib/s3-helpers.js";
+import { DocType } from "@prisma/client";
+import { Errors } from "src/shared/errors/AppError.js";
 
 export class DocumentService {
   private documentRepository = new DocumentRepository();
 
   /**
-   * Upload document to S3 and save metadata
-   *
-   * Handles: S3 upload + database record creation
-   *
-   * Returns: newly created document with S3 URL
+   * Generates S3 key and presigned upload URL, creates PENDING document record
+   * Returns: documentId, key, uploadUrl
    */
   async uploadDocument(data: UploadDocumentDto) {
-    // TODO: Implement S3 upload and document creation
-    // 1. Upload file to S3 bucket
-    // 2. Get S3 URL/key
-    // 3. Create document record with metadata
-    throw new Error("uploadDocument not implemented yet");
+    // Retrieve extension
+    const ext = path.extname(data.fileName) || "";
+
+    // Create a file path for S3 bucket
+    // Organisation ID/Member ID/RandomUUID.Extension
+    const key = `${data.orgId}/${data.memberId}/${randomUUID()}${ext}`;
+
+    // Retrieve url that frontend will use to PUT the file to S3
+    const uploadUrl = await getPresignedPutUrl(key, data.fileType, 300);
+
+    // Create document row with "PENDING" status + key for later access
+    const doc = await this.documentRepository.createDocument({
+      s3Key: key,
+      fileName: data.fileName,
+      fileType: data.fileType,
+      documentType: data.documentType as DocType,
+      status: "PENDING",
+      orgId: data.orgId,
+      memberId: data.memberId,
+    });
+
+    return {
+      documentId: doc.id,
+      key,
+      uploadUrl,
+    };
   }
 
   /**
-   * List all documents for a specific member
-   *
-   * Returns: list of documents for the member
+   * Verifies S3 upload, validates size, marks document as READY or FAILED
+   * Returns: confirmation
    */
-  async listDocumentsByMember(memberId: string, organisationSlug: string) {
-    // TODO: Implement listing documents by member
-    // 1. Verify member belongs to organisation
-    // 2. Fetch all documents for the member
-    throw new Error("listDocumentsByMember not implemented yet");
+  async completeDocumentUpload(documentId: string, expectedSize?: number) {
+    const doc = await this.documentRepository.findById(documentId);
+
+    if (!doc) {
+      throw Errors.notFound();
+    }
+
+    try {
+      const head = await headObject(doc.s3Key);
+      const size = Number(head.ContentLength ?? 0);
+
+      if (expectedSize && expectedSize !== size) {
+        await this.documentRepository.markDocumentAsFailed(doc.id);
+        throw Errors.badRequest({ message: "Size mismatch" });
+      }
+
+      await this.documentRepository.completeDocumentUpload({
+        documentId,
+        fileSize: size,
+        status: "READY",
+      });
+
+      return { ok: true };
+    } catch (error) {
+      // If it's already a custom error (like size mismatch), re-throw it
+      if (error instanceof Error && error.constructor.name === "AppError") {
+        throw error;
+      }
+      // Otherwise, it's an S3 error
+      await this.documentRepository.markDocumentAsFailed(doc.id);
+      throw Errors.badRequest({ message: "Object not found in S3" });
+    }
   }
 
   /**
-   * Get document by ID with presigned S3 URL
-   *
-   * Returns: document metadata with download URL
+   * Lists all READY documents for a member
+   * Returns: array of documents
    */
-  async getDocumentById(documentId: string, memberId: string, organisationSlug: string) {
-    // TODO: Implement get document
-    // 1. Verify document belongs to member
-    // 2. Verify member belongs to organisation
-    // 3. Generate presigned S3 URL for download
-    // 4. Return document with download URL
-    throw new Error("getDocumentById not implemented yet");
+  async listDocumentsByMember(data: GetDocumentsDto) {
+    return await this.documentRepository.findDocumentsByMember(data);
   }
 
   /**
-   * Delete document from S3 and database
-   *
-   * Returns: deletion confirmation
+   * Validates document is READY, generates presigned download URL
+   * Returns: presigned S3 URL (valid 90s)
    */
-  async deleteDocument(documentId: string, memberId: string, organisationSlug: string) {
-    // TODO: Implement document deletion
-    // 1. Verify document belongs to member
-    // 2. Verify member belongs to organisation
-    // 3. Delete file from S3
-    // 4. Delete document record from database
-    throw new Error("deleteDocument not implemented yet");
+  async getDocument(data: GetDocumentDto) {
+    const doc = await this.documentRepository.findDocument(data);
+
+    if (!doc) {
+      throw Errors.notFound({ message: "Document not found" });
+    }
+
+    if (doc.status !== "READY") {
+      throw Errors.badRequest({ message: "Document not ready" });
+    }
+
+    return await getPresignedGetUrl(doc.s3Key, doc.fileName, 90);
+  }
+
+  /**
+   * Deletes from S3, marks as DELETED in DB
+   * Returns: confirmation
+   */
+  async deleteDocument(data: DeleteDocumentDto) {
+    const doc = await this.documentRepository.findDocumentToDelete(data);
+
+    if (!doc) {
+      throw Errors.notFound({ message: "Document not found" });
+    }
+
+    // Delete from S3 (ignore errors as file might not exist)
+    await deleteObject(doc.s3Key).catch(() => {});
+
+    // Mark document as deleted in database
+    await this.documentRepository.markDocumentAsDeleted(doc.id);
+
+    return { ok: true };
   }
 }
