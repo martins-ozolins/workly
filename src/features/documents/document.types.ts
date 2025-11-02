@@ -2,7 +2,7 @@ export interface Document {
   id: string;
   name: string;
   type: string;
-  url: string;
+  s3Key: string;
   memberId: string;
   uploadedAt: Date;
   expiresAt?: Date | null;
@@ -13,15 +13,15 @@ export interface Document {
 export interface CreateDocumentDto {
   name: string;
   type: string;
-  url: string;
+  s3Key: string;
   memberId: string;
   expiresAt?: Date;
 }
 
-export interface UpdateDocumentDto {
-  name?: string;
-  type?: string;
-  url?: string;
-  memberId?: string;
+export interface UploadDocumentDto {
+  file: File;
+  name: string;
+  type: string;
+  memberId: string;
   expiresAt?: Date;
 }

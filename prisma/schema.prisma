@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -11,15 +11,6 @@ enum Role {
   admin
   hr
   employee
-}
-
-enum DocType {
-  passport
-  national_id
-  visa_permit
-  contract
-  tax_form
-  other
 }
 
 model User {
@@ -140,9 +131,7 @@ model Member {
   org  Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
   user User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
 
-  documentsOwned    Document[] @relation("DocOwnerMember")
-  documentsVerified Document[] @relation("DocVerifiedByMember")
-  documentsUploaded Document[] @relation("DocumentsUploaded")
+  documentsOwned Document[]
 
   // no duplicate people by email within an org
   @@unique([orgId, email])
@@ -150,30 +139,32 @@ model Member {
   @@map("member")
 }
 
+enum DocType {
+  passport
+  national_id
+  visa_permit
+  contract
+  tax_form
+  other
+}
+
 enum DocumentStatus {
-  success
-  waiting
-  failure
-  resubmit
+  PENDING
+  READY
+  FAILED
+  DELETED
 }
 
 model Document {
-  id            String         @id @default(uuid())
-  // document info
-  storageKey    String
-  fileName      String
-  contentType   String
-  sizeBytes     Int
-  checksum      String?
-  expiryDate    DateTime?
-  notes         String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  type          DocType
-  verified      Boolean        @default(false)
-  status        DocumentStatus @default(waiting)
-  reviewedAt    DateTime?
-  reviewComment String?
+  id           String         @id @default(uuid())
+  s3Key        String         @unique
+  fileName     String
+  fileType     String
+  fileSize     Int? // set at complete()
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  documentType DocType
+  status       DocumentStatus
 
   // org relation
   orgId String
@@ -181,19 +172,9 @@ model Document {
 
   // FK to the document's owner 
   memberId String
-  member   Member @relation("DocOwnerMember", fields: [memberId], references: [id], onDelete: Cascade)
-
-  // FK to the member that verified this doc
-  verifiedByMemberId String?
-  verifiedByMember   Member? @relation("DocVerifiedByMember", fields: [verifiedByMemberId], references: [id], onDelete: SetNull)
-
-  // FK to the member who uploaded 
-  uploadedById     String?
-  uploadedByMember Member? @relation("DocumentsUploaded", fields: [uploadedById], references: [id], onDelete: SetNull)
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   @@index([orgId, memberId])
-  @@index([orgId, type, verified])
-  @@index([orgId, expiryDate])
   @@map("document")
 }
 

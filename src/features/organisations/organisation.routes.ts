@@ -10,6 +10,7 @@ import {
   isOrganisationAdminOrHr,
   isOrganisationAdminOrHrOrSelf,
 } from "./organisation.middleware.js";
+import documentRouter from "../documents/document.routes.js";
 
 const router = Router();
 const organisationController = new OrganisationController();
@@ -66,6 +67,14 @@ router.delete(
   requireAuth,
   isOrganisationAdmin,
   organisationController.deactivateMember
+);
+
+// Document routes - nested under member
+router.use(
+  "/:slug/members/:memberId/documents",
+  requireAuth,
+  isOrganisationAdminOrHrOrSelf,
+  documentRouter
 );
 
 // Member view - basic org info
