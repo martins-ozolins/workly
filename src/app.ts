@@ -1,4 +1,5 @@
 import express, { type Request, type Response } from "express";
+import morgan from "morgan";
 import { auth } from "./lib/auth.js";
 import { toNodeHandler } from "better-auth/node";
 import { corsMiddleware } from "./shared/middleware/cors.middleware.js";
@@ -18,6 +19,10 @@ const app = express();
 // middleware
 app.use(corsMiddleware);
 
+if (process.env.NODE_ENV !== "production") {
+  app.use(morgan("dev"));
+}
+
 // better auth middleware
 app.all("/api/auth/*splat", toNodeHandler(auth));
 
@@ -25,8 +30,8 @@ app.all("/api/auth/*splat", toNodeHandler(auth));
 app.use(express.json());
 
 // Health check
-app.get("/", (_req: Request, res: Response) => {
-  res.send("Hello from Express + TypeScript!");
+app.get("/healthz", (_req: Request, res: Response) => {
+  res.send("Hello from Employer Hub Backend");
 });
 
 // API routes (protected by auth middleware)
