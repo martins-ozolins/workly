@@ -7,5 +7,4 @@ prisma/generated
 prisma/client
 src/generated/prisma
 package-lock.json
-documents
 *.log

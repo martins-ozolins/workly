@@ -1,10 +1,11 @@
 import { prisma } from "../../config/prisma.js";
 import type {
-  CompleteDocumentUploadDto,
+  CompleteDocumentUploadRepositoryDto,
   CreateDocumentDto,
   DeleteDocumentDto,
   GetDocumentDto,
   GetDocumentsDto,
+  UpdateDocumentRepositoryDto,
 } from "./document.types.js";
 
 export class DocumentRepository {
@@ -30,7 +31,7 @@ export class DocumentRepository {
    * Marks document as READY, sets file size
    * Returns: updated document
    */
-  async completeDocumentUpload(data: CompleteDocumentUploadDto) {
+  async completeDocumentUpload(data: CompleteDocumentUploadRepositoryDto) {
     return await prisma.document.update({
       where: { id: data.documentId },
       data: { status: "READY", fileSize: data.fileSize },
@@ -122,6 +123,23 @@ export class DocumentRepository {
     return await prisma.document.update({
       where: { id: documentId },
       data: { status: "DELETED" },
+    });
+  }
+
+  /**
+   * Updates document with new file information
+   * Returns: updated document
+   */
+  async updateDocument(data: UpdateDocumentRepositoryDto) {
+    return await prisma.document.update({
+      where: { id: data.documentId },
+      data: {
+        s3Key: data.s3Key,
+        fileName: data.fileName,
+        fileType: data.fileType,
+        documentType: data.documentType,
+        status: data.status,
+      },
     });
   }
 }

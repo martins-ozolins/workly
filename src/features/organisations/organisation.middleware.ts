@@ -236,7 +236,7 @@ export const isOrganisationAdminOrHrOrSelf = async (
       throw Errors.notFound({ message: "Organisation not found" });
     }
 
-    // Check if user is a member of this organisation
+    // Check if user making request is a member of this organisation
     const userMember = await prisma.member.findFirst({
       where: {
         orgId: organisation.id,

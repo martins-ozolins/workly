@@ -32,6 +32,13 @@ export interface UploadDocumentDto {
 
 export interface CompleteDocumentUploadDto {
   documentId: string;
+  memberId: string;
+  organisationId: string;
+  expectedSize: number;
+}
+
+export interface CompleteDocumentUploadRepositoryDto {
+  documentId: string;
   status: string;
   fileSize: number;
 }
@@ -51,4 +58,22 @@ export interface DeleteDocumentDto {
   documentId: string;
   memberId: string;
   organisationId: string;
+}
+
+export interface UpdateDocumentDto {
+  documentId: string;
+  fileName: string;
+  fileType: string;
+  documentType: string;
+  memberId: string;
+  organisationId: string;
+}
+
+export interface UpdateDocumentRepositoryDto {
+  documentId: string;
+  s3Key: string;
+  fileName: string;
+  fileType: string;
+  documentType: DocType;
+  status: DocumentStatus;
 }

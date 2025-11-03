@@ -211,7 +211,12 @@ export class OrganisationController {
   updateMember = async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Check required data from middleware
-      if (!req.params.slug || !req.params.memberId || !req.organisationId || !req.member) {
+      if (
+        !req.params.slug ||
+        !req.params.memberId ||
+        !req.organisationId ||
+        !req.member
+      ) {
         throw Errors.notFound();
       }
 

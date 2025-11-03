@@ -1,8 +1,10 @@
 import { DocumentRepository } from "./document.repository.js";
 import type {
+  CompleteDocumentUploadDto,
   DeleteDocumentDto,
   GetDocumentDto,
   GetDocumentsDto,
+  UpdateDocumentDto,
   UploadDocumentDto,
 } from "./document.types.js";
 import path from "node:path";
@@ -18,17 +20,22 @@ import { Errors } from "../../shared/errors/AppError.js";
 
 export class DocumentService {
   private documentRepository = new DocumentRepository();
+  private readonly MAX_FILE_SIZE = 50 * 1024 * 1024;
 
   /**
    * Generates S3 key and presigned upload URL, creates PENDING document record
    * Returns: documentId, key, uploadUrl
    */
   async uploadDocument(data: UploadDocumentDto) {
-    // Retrieve extension
-    const ext = path.extname(data.fileName) || "";
+    const ext = path.extname(data.fileName).toLowerCase();
+    const allowedExts = [".pdf", ".png", ".jpg", ".jpeg"];
 
-    // Create a file path for S3 bucket
-    // Organisation ID/Member ID/RandomUUID.Extension
+    if (!allowedExts.includes(ext)) {
+      throw Errors.badRequest({
+        message: `Invalid file extension. Allowed: ${allowedExts.join(", ")}`,
+      });
+    }
+
     const key = `${data.orgId}/${data.memberId}/${randomUUID()}${ext}`;
 
     // Retrieve url that frontend will use to PUT the file to S3
@@ -56,24 +63,39 @@ export class DocumentService {
    * Verifies S3 upload, validates size, marks document as READY or FAILED
    * Returns: confirmation
    */
-  async completeDocumentUpload(documentId: string, expectedSize?: number) {
-    const doc = await this.documentRepository.findById(documentId);
+  async completeDocumentUpload(data: CompleteDocumentUploadDto) {
+    // Validate document ownership - ensures documentId belongs to the member/org
+    const doc = await this.documentRepository.findDocument({
+      documentId: data.documentId,
+      memberId: data.memberId,
+      organisationId: data.organisationId,
+    });
 
     if (!doc) {
-      throw Errors.notFound();
+      throw Errors.notFound({ message: "Document not found" });
+    }
+
+    if (data.expectedSize > this.MAX_FILE_SIZE) {
+      await deleteObject(doc.s3Key).catch(() => {});
+      await this.documentRepository.markDocumentAsFailed(doc.id);
+      throw Errors.badRequest({
+        message: `File size exceeds maximum limit of ${this.MAX_FILE_SIZE / 1024 / 1024}MB`
+      });
     }
 
     try {
       const head = await headObject(doc.s3Key);
       const size = Number(head.ContentLength ?? 0);
 
-      if (expectedSize && expectedSize !== size) {
+      if (data.expectedSize !== size) {
         await this.documentRepository.markDocumentAsFailed(doc.id);
-        throw Errors.badRequest({ message: "Size mismatch" });
+        throw Errors.badRequest({
+          message: `File size mismatch. Expected ${data.expectedSize} bytes, got ${size} bytes`,
+        });
       }
 
       await this.documentRepository.completeDocumentUpload({
-        documentId,
+        documentId: data.documentId,
         fileSize: size,
         status: "READY",
       });
@@ -134,5 +156,58 @@ export class DocumentService {
     await this.documentRepository.markDocumentAsDeleted(doc.id);
 
     return { ok: true };
+  }
+
+  /**
+   * Updates an existing document by replacing it in S3
+   * Generates new S3 key and presigned upload URL, updates document record
+   * Returns: documentId, key, uploadUrl
+   */
+  async updateDocument(data: UpdateDocumentDto) {
+    // Find existing document
+    const doc = await this.documentRepository.findDocument({
+      documentId: data.documentId,
+      memberId: data.memberId,
+      organisationId: data.organisationId,
+    });
+
+    if (!doc) {
+      throw Errors.notFound({ message: "Document not found" });
+    }
+
+    const oldS3Key = doc.s3Key;
+
+    const ext = path.extname(data.fileName).toLowerCase();
+    const allowedExts = [".pdf", ".png", ".jpg", ".jpeg"];
+
+    if (!allowedExts.includes(ext)) {
+      throw Errors.badRequest({
+        message: `Invalid file extension. Allowed: ${allowedExts.join(", ")}`,
+      });
+    }
+
+    const newKey = `${data.organisationId}/${data.memberId}/${randomUUID()}${ext}`;
+
+    // Retrieve url that frontend will use to PUT the file to S3
+    const uploadUrl = await getPresignedPutUrl(newKey, data.fileType, 300);
+
+    // Update document with new key and set status to PENDING
+    await this.documentRepository.updateDocument({
+      documentId: data.documentId,
+      s3Key: newKey,
+      fileName: data.fileName,
+      fileType: data.fileType,
+      documentType: data.documentType as DocType,
+      status: "PENDING",
+    });
+
+    // Delete old file from S3 (ignore errors as file might not exist)
+    await deleteObject(oldS3Key).catch(() => {});
+
+    return {
+      documentId: doc.id,
+      key: newKey,
+      uploadUrl,
+    };
   }
 }

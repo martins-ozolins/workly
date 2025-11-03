@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { DocumentController } from "./document.controller.js";
 
-const router = Router();
+const router = Router({ mergeParams: true });
 const documentController = new DocumentController();
 
 // Routes are mounted at /:slug/members/:memberId/documents
@@ -17,6 +17,9 @@ router.get("/", documentController.getDocuments);
 
 // GET /:documentId => Get/download specific document
 router.get("/:documentId", documentController.getDocument);
+
+// POST /:documentId => Update/replace document (returns presigned PUT URL)
+router.post("/:documentId", documentController.updateDocument);
 
 // DELETE /:documentId => Delete document (from S3 and DB)
 router.delete("/:documentId", documentController.deleteDocument);

@@ -6,6 +6,7 @@ import {
   deleteDocumentSchema,
   getDocumentSchema,
   getDocumentsSchema,
+  updateDocumentSchema,
   uploadDocumentSchema,
 } from "./document.validators.js";
 import { formatZodErrors } from "../../utils/formatZodErrors.js";
@@ -64,19 +65,31 @@ export class DocumentController {
     next: NextFunction
   ) => {
     try {
-      // Validate data based on the schema
-      const validationResult = completeDocumentUploadSchema.safeParse(req.body);
+      // Extract ownership data from URL params and middleware
+      const memberId = req.params.memberId;
+      const organisationId = req.organisationId;
+
+      // Check required data from middleware
+      if (!memberId || !organisationId) {
+        throw Errors.notFound();
+      }
+
+      // Validate data based on the schema (includes ownership validation)
+      const validationResult = completeDocumentUploadSchema.safeParse({
+        documentId: req.body.documentId,
+        expectedSize: req.body.expectedSize,
+        memberId,
+        organisationId,
+      });
 
       // Throw an error and pass formatted validation results
       if (!validationResult.success) {
         throw Errors.validation({ details: formatZodErrors(validationResult) });
       }
-      const { documentId, expectedSize } = validationResult.data;
 
-      // Delegate to service
+      // Delegate to service with ownership data for security validation
       const result = await this.documentService.completeDocumentUpload(
-        documentId,
-        expectedSize
+        validationResult.data
       );
 
       res.json(result);
@@ -122,8 +135,12 @@ export class DocumentController {
    */
   getDocument = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // Validate data based on the schema
-      const validationResult = getDocumentSchema.safeParse(req.body);
+      // Validate data from URL params
+      const validationResult = getDocumentSchema.safeParse({
+        documentId: req.params.documentId,
+        memberId: req.params.memberId,
+        organisationId: req.organisationId,
+      });
 
       // Throw an error and pass formatted validation results
       if (!validationResult.success) {
@@ -159,6 +176,37 @@ export class DocumentController {
       }
 
       const result = await this.documentService.deleteDocument(
+        validationResult.data
+      );
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * POST /:slug/members/:memberId/documents/:documentId
+   * Initiates document update, generates presigned S3 upload URL for replacement file
+   * Returns: documentId, key, uploadUrl (valid 300s)
+   * Access: Admin, HR, or member
+   */
+  updateDocument = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      // Validate data based on the schema
+      const validationResult = updateDocumentSchema.safeParse({
+        documentId: req.params.documentId,
+        memberId: req.params.memberId,
+        organisationId: req.organisationId,
+        ...req.body,
+      });
+
+      // Throw an error and pass formatted validation results
+      if (!validationResult.success) {
+        throw Errors.validation({ details: formatZodErrors(validationResult) });
+      }
+
+      const result = await this.documentService.updateDocument(
         validationResult.data
       );
 

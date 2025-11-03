@@ -15,7 +15,6 @@ export default defineConfig([
       "prisma/generated/**",
       "prisma/client/**",
       "src/generated/prisma/**",
-      "documents/",
     ],
   },
   eslint.configs.recommended,

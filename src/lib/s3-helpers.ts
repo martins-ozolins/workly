@@ -17,6 +17,7 @@ export async function getPresignedPutUrl(
     Bucket: BUCKET,
     Key: key,
     ContentType: contentType,
+    ServerSideEncryption: "AES256",
   });
   return getSignedUrl(s3, cmd, { expiresIn: expiresSec });
 }
@@ -32,10 +33,13 @@ export async function getPresignedGetUrl(
   downloadName: string,
   expiresSec = 90
 ) {
+  const safeFilename = downloadName.replace(/["\\]/g, "\\$&");
+  const encodedFilename = encodeURIComponent(downloadName);
+
   const cmd = new GetObjectCommand({
     Bucket: BUCKET,
     Key: key,
-    ResponseContentDisposition: `attachment; filename="${encodeURIComponent(downloadName)}"`,
+    ResponseContentDisposition: `attachment; filename="${safeFilename}"; filename*=UTF-8''${encodedFilename}`,
     ResponseContentType: "application/octet-stream",
   });
   return getSignedUrl(s3, cmd, { expiresIn: expiresSec });
