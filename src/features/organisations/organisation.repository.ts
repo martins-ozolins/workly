@@ -3,7 +3,10 @@ import {
   CreateOrganisationInput,
   UpdateOrganisationInput,
 } from "./organisation.validators.js";
-import type { UpdateMemberInput } from "../members/member.validators.js";
+import type {
+  UpdateMemberInput,
+  CreateMemberInput,
+} from "../members/member.validators.js";
 
 export class OrganisationRepository {
   /**
@@ -162,25 +165,7 @@ export class OrganisationRepository {
    * Create a new member for an organisation
    * Used for inviting new members
    */
-  async createMember(
-    orgId: string,
-    data: {
-      name: string;
-      email: string;
-      role: "admin" | "hr" | "employee";
-      dept: string | null;
-      startDate: string | null;
-      status:
-        | "active"
-        | "pending"
-        | "vacation"
-        | "paid_leave"
-        | "inactive"
-        | "terminated";
-      country: string | null;
-      userId: string | null;
-    }
-  ) {
+  async createMember(orgId: string, data: CreateMemberInput) {
     return prisma.member.create({
       data: {
         ...data,

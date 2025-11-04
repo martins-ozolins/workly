@@ -1,3 +1,4 @@
+// Database entity type
 export interface Organisation {
   id: string;
   name: string;
@@ -8,16 +9,6 @@ export interface Organisation {
   updatedAt: Date;
 }
 
-export interface CreateOrganisationDto {
-  name: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-}
-
-export interface UpdateOrganisationDto {
-  name?: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-}
+// For validation DTOs, use Zod-inferred types from organisation.validators.ts:
+// - CreateOrganisationInput
+// - UpdateOrganisationInput

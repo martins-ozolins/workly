@@ -4,7 +4,10 @@ import {
   CreateOrganisationInput,
   UpdateOrganisationInput,
 } from "./organisation.validators.js";
-import type { UpdateMemberInput } from "../members/member.validators.js";
+import type {
+  UpdateMemberInput,
+  CreateMemberInput,
+} from "../members/member.validators.js";
 
 export class OrganisationService {
   private organisationRepository = new OrganisationRepository();
@@ -83,25 +86,7 @@ export class OrganisationService {
    *
    * Access: Admin or HR
    */
-  async addNewMember(
-    orgId: string,
-    data: {
-      name: string;
-      email: string;
-      role: "admin" | "hr" | "employee";
-      dept: string | null;
-      startDate: string | null;
-      status:
-        | "active"
-        | "pending"
-        | "vacation"
-        | "paid_leave"
-        | "inactive"
-        | "terminated";
-      country: string | null;
-      userId: string | null;
-    }
-  ) {
+  async addNewMember(orgId: string, data: CreateMemberInput) {
     // Check if organisation exists
     const organisation = await this.organisationRepository.findById(orgId);
     if (!organisation) {

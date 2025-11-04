@@ -9,21 +9,3 @@ export interface Member {
   createdAt: Date;
   updatedAt: Date;
 }
-
-export interface CreateMemberDto {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  organisationId: string;
-  userId?: string;
-}
-
-export interface UpdateMemberDto {
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  phone?: string;
-  organisationId?: string;
-  userId?: string;
-}
