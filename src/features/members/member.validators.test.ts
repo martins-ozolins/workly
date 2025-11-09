@@ -177,6 +177,81 @@ describe("Member Validators", () => {
       const result = updateMemberSchema.safeParse(validInput);
       expect(result.success).toBe(true);
     });
+
+    it("should validate a valid member update input with startDate", () => {
+      const validInput = {
+        role: "admin",
+        name: "John Doe",
+        email: "john.doe@example.com",
+        dept: "Engineering",
+        startDate: "2024-01-15T00:00:00.000Z",
+        status: "active",
+        country: "USA",
+      };
+
+      const result = updateMemberSchema.safeParse(validInput);
+      expect(result.success).toBe(true);
+    });
+
+    it("should validate a valid member update input with null country field", () => {
+      const validInput = {
+        role: "admin",
+        name: "John Doe",
+        email: "john.doe@example.com",
+        dept: "Engineering",
+        startDate: "2024-01-15T00:00:00.000Z",
+        status: "active",
+        country: null,
+      };
+
+      const result = updateMemberSchema.safeParse(validInput);
+      expect(result.success).toBe(true);
+    });
+
+    it("should reject invalid input email", () => {
+      const validInput = {
+        role: "admin",
+        name: "John Doe",
+        email: "john",
+        dept: "Engineering",
+        startDate: "2024-01-15T00:00:00.000Z",
+        status: "active",
+        country: null,
+      };
+
+      const result = updateMemberSchema.safeParse(validInput);
+      expect(result.success).toBe(false);
+    });
+
+    it("should reject invalid input status", () => {
+      const validInput = {
+        role: "admin",
+        name: "John Doe",
+        email: "john@gmail.com",
+        dept: "Engineering",
+        startDate: "2024-01-15T00:00:00.000Z",
+        status: "random",
+        country: null,
+      };
+
+      const result = updateMemberSchema.safeParse(validInput);
+      expect(result.success).toBe(false);
+    });
+
+    it("should reject missing name input", () => {
+      const validInput = {
+        role: "admin",
+        name: "",
+        email: "john@gmail.com",
+        dept: "Engineering",
+        startDate: "2024-01-15T00:00:00.000Z",
+        status: "active",
+        country: null,
+      };
+
+      const result = updateMemberSchema.safeParse(validInput);
+      expect(result.success).toBe(false);
+    });
   });
 
   // TODO: Add tests for:
