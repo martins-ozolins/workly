@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { createMemberSchema, RoleEnum } from "./member.validators.js";
+import {
+  createMemberSchema,
+  MemberStatusEnum,
+  RoleEnum,
+  updateMemberSchema,
+} from "./member.validators.js";
 
 describe("Member Validators", () => {
   describe("createMemberSchema", () => {
@@ -139,13 +144,41 @@ describe("Member Validators", () => {
       expect(RoleEnum.safeParse("employee").success).toBe(true);
     });
 
-    it("should accept invalid roles", () => {
+    it("should reject invalid roles", () => {
       expect(RoleEnum.safeParse("random one").success).toBe(false);
     });
   });
 
+  describe("MemberStatusEnum", () => {
+    it("should accept valid statuses", () => {
+      expect(MemberStatusEnum.safeParse("active").success).toBe(true);
+      expect(MemberStatusEnum.safeParse("vacation").success).toBe(true);
+      expect(MemberStatusEnum.safeParse("paid_leave").success).toBe(true);
+    });
+
+    it("should reject invalid statuses", () => {
+      expect(MemberStatusEnum.safeParse("random one").success).toBe(false);
+      expect(MemberStatusEnum.safeParse("random one 2").success).toBe(false);
+    });
+  });
+
+  describe("updateMemberSchema", () => {
+    it("should validate a valid member update input", () => {
+      const validInput = {
+        role: "admin",
+        name: "John Doe",
+        email: "john.doe@example.com",
+        dept: "Engineering",
+        startDate: null,
+        status: "active",
+        country: "USA",
+      };
+
+      const result = updateMemberSchema.safeParse(validInput);
+      expect(result.success).toBe(true);
+    });
+  });
+
   // TODO: Add tests for:
-  // - updateMemberSchema
   // - updateMemberSelfSchema
-  // - MemberStatusEnum
 });
